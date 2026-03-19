@@ -686,118 +686,40 @@ def spawnduck(d_id, d_type):
 def topduck():
     # No players?
     if bot.cnfread('duckhunt.cnf', 'ducks', 'cache') == '0':
-        # if isconnect:
         irc.send(b'PRIVMSG ' + duckchan + b' :There are currently no top ducks.\r\n')
         return 1
-    # if bot.cnfexists('duckhunt.cnf', 'ducks', 'cache') is False:
-    #     bot.cnfwrite('duckhunt.cnf', 'ducks', 'cache', '0')
-    # Gather score information
+    # Gather score information - rank by ducks shot (token 1)
     parser = RawConfigParser()
     parser.read('duckhunt.cnf')
-    datt = ''
+    scores = []
     for name, value in parser.items('ducks'):
         datkey = '%s' % name
         if datkey == 'cache':
             continue
-        # print(datkey)
         dat = bot.cnfread('duckhunt.cnf', 'ducks', datkey)
-        # print(dat)
-        pxp = bot.gettok(dat, 3, ',') + '?' + str(datkey)
-        pexp = bot.gettok(dat, 3, ',')
-        if int(pexp) == 0:
+        ducks = int(bot.gettok(dat, 1, ','))
+        if ducks == 0:
             continue
-        if datt != '':
-            datt = datt + ',' + pxp
-            continue
-        if datt == '':
-            datt = str(pxp)
-            continue
-    # print('GATHER: ' + str(datt))
+        scores.append((ducks, datkey))
 
-    # Determine if only 1 top duck or multiple, if more than one, continues if not, sends message.
-    if bot.numtok(datt, ',') == 1:
-        # print('only one top duck')
-        usr = bot.gettok(datt, 0, ',')
-        # print('USER: ' + str(usr))
-        if isconnect:
-            irc.send(b'PRIVMSG ' + duckchan + b' :The top duck is: ' + bot.gettok(usr, 1, "'").encode() + b' ' + bot.gettok(datt, 0, '?').encode() + b' xp\r\n')
+    if not scores:
+        irc.send(b'PRIVMSG ' + duckchan + b' :There are currently no top ducks.\r\n')
         return 1
 
-    # Determine the top 5 scores and assemble into a token string
-    vx = 0
-    topducklist = []
-    ntok = bot.numtok(datt, ',') - 1
-    while vx <= ntok:
-        rdat = bot.gettok(datt, vx, ',')
-        td = bot.gettok(rdat, 0, '?')
-        topducklist.append(int(td))
-        vx += 1
-        continue
+    # Sort by ducks descending, take top 5
+    scores.sort(key=lambda x: x[0], reverse=True)
+    scores = scores[:5]
 
-    # sort the top 5 scores in order
-    topducklist.sort(reverse=True)
+    if len(scores) == 1:
+        if isconnect:
+            msg = 'The top duck is: ' + scores[0][1] + ' ' + str(scores[0][0]) + ' ducks'
+            irc.send(b'PRIVMSG ' + duckchan + b' :' + bytes(msg, 'utf-8') + b'\r\n')
+        return 1
 
-    # attach usernames to appropriate scores and assemble into token string
-    ds = 0
-    sc = 0
-    totaltop = bot.numtok(datt, ',')
-    topducks = ''
-    while ds <= ntok:
-        if bot.numtok(topducks, ',') < totaltop < sc:
-            ds = 0
-            sc = 0
-            continue
-        if bot.numtok(topducks, ',') == totaltop:
-            break
-        if bot.numtok(topducks, ',') > totaltop:
-            break
-        scr = bot.gettok(datt, ds, ',')
-        if int(bot.gettok(scr, 0, '?')) == topducklist[sc]:
-            if topducks != '':
-                topducks = topducks + ',' + bot.gettok(datt, ds, ',')
-                sc += 1
-                ds = 0
-            if topducks == '':
-                topducks = bot.gettok(datt, ds, ',')
-                sc += 1
-                ds = 0
-            continue
-        if int(bot.gettok(scr, 0, '?')) != topducklist[sc]:
-            ds += 1
-            continue
-        if ds == ntok and bot.numtok(topducks, ',') < 5:
-            ds = 0
-            continue
-
-    # assemble and clean up final top duck score message
-
-    xy = 0
-    topdmsg = ''
-    if totaltop > 5:
-        totaltop = 5
-    while xy <= totaltop:
-        if xy >= totaltop:
-            break
-        topd = bot.gettok(topducks, xy, ',')
-        if topdmsg != '':
-            usr = bot.gettok(topd, 1, '?')
-            topdmsg = topdmsg + ' | ' + bot.gettok(usr, 1, "'") + ' ' + bot.gettok(topd, 0, '?') + ' xp'
-            if xy == totaltop:
-                break
-            if xy < totaltop:
-                xy += 1
-                continue
-        if topdmsg == '':
-            usr = bot.gettok(topd, 1, '?')
-            topdmsg = bot.gettok(usr, 1, "'") + ' ' + bot.gettok(topd, 0, '?') + ' xp'
-            if xy == totaltop:
-                break
-            if xy < totaltop:
-                xy += 1
-                continue
-    # print('TOP DUCKS: ' + str(topdmsg))
+    parts = [s[1] + ' ' + str(s[0]) + ' ducks' for s in scores]
+    topdmsg = ' | '.join(parts)
     if isconnect:
-        irc.send(b'PRIVMSG ' + duckchan + b' :The top ducks are: ' + topdmsg.encode() + b'\r\n')
+        irc.send(b'PRIVMSG ' + duckchan + b' :The top ducks are: ' + bytes(topdmsg, 'utf-8') + b'\r\n')
 
 
 # ===> topduck
