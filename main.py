@@ -700,7 +700,9 @@ def topduck():
         ducks = int(bot.gettok(dat, 1, ','))
         if ducks == 0:
             continue
-        scores.append((ducks, datkey))
+        # Strip legacy b'...' wrapper from keys written by older versions
+        nick = datkey.strip("b'\"")
+        scores.append((ducks, nick))
 
     if not scores:
         irc.send(b'PRIVMSG ' + duckchan + b' :There are currently no top ducks.\r\n')
@@ -1035,6 +1037,25 @@ while 1:
                 if str(botpass) != '0':
                     irc.send(b'PRIVMSG ' + b'NickServ :IDENTIFY ' + bytes(str(botpass), 'utf-8') + b'\r\n')
                 irc.send(b"JOIN " + duckchan + b"\r\n")
+                # Migrate legacy b'nick' keys written by older versions of the bot
+                migrate_sections = [
+                    'ducks', 'expl_ammo', 'gun_grease', 'trigger_lock', 'silencer',
+                    'lucky_charm', 'sunglasses', 'accident_insurance', 'rain_coat',
+                    'duck_bomb', 'bedazzled', 'soggy', 'bombed', 'duck_jam',
+                    'bread_lock', 'popcorn', 'sabotage'
+                ]
+                mig_parser = RawConfigParser()
+                mig_parser.read('duckhunt.cnf')
+                for section in migrate_sections:
+                    if not mig_parser.has_section(section):
+                        continue
+                    for key, value in mig_parser.items(section):
+                        if key.startswith("b'") or key.startswith('b"'):
+                            clean = key.strip("b'\"")
+                            if clean and clean != key:
+                                bot.cnfwrite('duckhunt.cnf', section, clean, value)
+                                bot.cnfdelete('duckhunt.cnf', section, key)
+                print('Legacy key migration complete.')
                 # Start DuckHunt Timer (for ducks only)
                 threading.excepthook = ssl_err
                 timer_thread = threading.Thread(target=duck_timer)
@@ -1116,8 +1137,8 @@ while 1:
                 temp = txt[x].split(b'!')
                 username = temp[0].strip(b':')
                 dusername = username.decode()  # for botmaster, admin, ignore, and to fix case sensative bug v1.1.0
-                pusername = dusername  # case-preserved decoded username for cnf keys
-                dusername = dusername.lower()
+                pusername = dusername.lower()  # player key - always lowercase (ConfigParser lowercases all keys)
+                dusername = pusername
                 # check is user is a relay v1.1.3
                 if bot.istok(relaybot, dusername, ',') is True and len(data) < 6:
                     continue
@@ -1134,8 +1155,8 @@ while 1:
                     rbusername = bytes(str(rbusername), 'utf-8')
                     username = rbusername
                     dusername = username.decode()
-                    pusername = dusername  # case-preserved decoded username for cnf keys
-                    dusername = dusername.lower()
+                    pusername = dusername.lower()  # player key - always lowercase (ConfigParser lowercases all keys)
+                    dusername = pusername
                     if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is True:
                         if bot.duckinfo(pusername, b'inv') != '1':
                             bot.duckinfo(pusername, b'inv', '1')
