@@ -178,9 +178,9 @@ def duckstats(user, ruser, ext=''):
     mreliability = bot.gettok(bot.duckinfo(ruser, b'guninfo'), 2, '?').encode()
     if float(reliability) <= 65:
         gunstatus = b'Needs cleaning'
-    elif bot.istok(jammedguns, str(username), ',') is True:
+    elif bot.istok(jammedguns, str(ruser), ',') is True:
         gunstatus = b'Jammed'
-    elif bot.istok(confiscatedguns, str(username), ',') is True and gunconf == 'on':
+    elif bot.istok(confiscatedguns, str(ruser), ',') is True and gunconf == 'on':
         gunstatus = b'Confiscated'
     else:
         gunstatus = b'OK'
@@ -280,6 +280,7 @@ def duck_timer():
 
         # duck spawn/flee timer handling =======================================================================================
         if not duckhunt:
+            time.sleep(10)
             continue
         time.sleep(10)  # fastest this way ¯\_(o.O)_/¯
         if serverssl == 'on':  # v 1.1.3-2 SSL stuff
@@ -543,7 +544,7 @@ def shopmenu(user, opt=''):
     # refill magazine
     shop2 = '2:\x037,1 Refill Magazine\x034,1 (' + str(bot.shopprice(user, 2)) + ' xp)'
     if infammo == 'on':
-        shop2 = '2:\x0314,1 Refill Magazine (' + str(bot.shopprice(user, 1)) + ' xp)'
+        shop2 = '2:\x0314,1 Refill Magazine (' + str(bot.shopprice(user, 2)) + ' xp)'
     # gun cleaning
     shop3 = '3:\x037,1 Gun Cleaning\x034,1 (' + str(bot.shopprice(user, 3)) + ' xp)'
     # explosive ammo
@@ -923,7 +924,7 @@ def resetdef():
     global flytime
     flytime = 1500
 
-    bot.cnfwrite('duckhunt.cnf', 'duckhunt', 'duckexp', '17')
+    bot.cnfwrite('duckhunt.cnf', 'duckhunt', 'duckexp', '15')
     global duckexp
     duckexp = 15
 
@@ -937,7 +938,7 @@ def resetdef():
 
     bot.cnfwrite('duckhunt.cnf', 'duckhunt', 'friendrate', '70')
     global friendrate
-    friendrate = 71
+    friendrate = 70
 
     bot.cnfwrite('duckhunt.cnf', 'duckhunt', 'floodcheck', '10,8')
     global flood_check
@@ -1262,8 +1263,8 @@ while 1:
                         flood = 0
                         flood_cont = False
                         irc.send(b'PRIVMSG ' + duckchan + b' :\x033* Flood Control Deactivated *\x03\r\n')
+                    else:
                         continue
-                    continue
                 # flood control not activated
                 elif flood_check is True and flood_cont is False and duckhunt is True:
                     if utfix(data[3]) is False:
@@ -2075,7 +2076,7 @@ while 1:
 # !duckhunt <on/off> (Botmaster and Admin only)
 # ======================================================================================================================
                         if data[3].lower() == b':!duckhunt' or data3.lower() == b'!duckhunt':
-                            if len(data) != 5 or data4 == b'':
+                            if len(data) != 5:
                                 continue
                             if bot.istok(botmaster, dusername, ',') is False and bot.istok(adminlist, dusername, ',') is False:
                                 continue
@@ -3269,7 +3270,10 @@ while 1:
                             if bot.numtok(confiscatedguns, ',') == 1:
                                 confiscatedguns = ''
                             if bot.numtok(confiscatedguns, ',') > 1:
-                                confiscatedguns = bot.deltok(confiscatedguns, str(username), ',')
+                                if data4 != b'' and datarelay is True:
+                                    confiscatedguns = bot.deltok(confiscatedguns, str(data4), ',')
+                                else:
+                                    confiscatedguns = bot.deltok(confiscatedguns, str(data[4]), ',')
                             if data4 != b'':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :\x01ACTION returns ' + data4 + b"'s gun.\x01\r\n")
                                 continue
@@ -3443,7 +3447,7 @@ while 1:
                                     jammed = random.randint(1, int(jam))
 
                             if jammed >= float(reliability) or bot.istok(jammedguns, str(username), ',') is True:
-                                if jammedguns == b'':
+                                if jammedguns == '':
                                     jammedguns = str(username)
                                 else:
                                     jammedguns = str(jammedguns) + ',' + str(username)
@@ -3611,7 +3615,7 @@ while 1:
 
                                     # accidents
                                     accidents = int(accidents) + 1
-                                    bot.duckinfo(username, 'accidents', accidents)
+                                    bot.duckinfo(username, b'accidents', str(accidents))
                                     # determine damage
                                     damage = ''
                                     dmg = random.randint(1, 3)
@@ -3639,7 +3643,7 @@ while 1:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, str(xp))
+                                        bot.duckinfo(username, b'xp', str(xp))
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp] [Ricochet]\x03\r\n')
                                         continue
                                     # determine accident insurance
@@ -3653,7 +3657,7 @@ while 1:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, str(xp))
+                                        bot.duckinfo(username, b'xp', str(xp))
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username+ b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp]\x03 \x033[GUN NOT CONFISCATED: Accident Insurance]\x03\r\n')
                                         continue
                                     # does not have accident insurance
@@ -3663,7 +3667,7 @@ while 1:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, str(xp))
+                                        bot.duckinfo(username, b'xp', str(xp))
                                         # gun confiscation
                                         if confiscatedguns != '':
                                             confiscatedguns = str(confiscatedguns) + ',' + str(username)
@@ -3943,7 +3947,7 @@ while 1:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, str(xp))
+                                    bot.duckinfo(username, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp] [Ricochet]\x03\r\n')
                                     continue
 
