@@ -725,20 +725,14 @@ def topduck():
 
     # Determine the top 5 scores and assemble into a token string
     vx = 0
-    topducklist = ''
+    topducklist = []
     ntok = bot.numtok(datt, ',') - 1
     while vx <= ntok:
         rdat = bot.gettok(datt, vx, ',')
-        if topducklist != '':
-            td = bot.gettok(rdat, 0, '?')
-            topducklist.append(int(td))
-            vx += 1
-            continue
-        if topducklist == '':
-            td = bot.gettok(rdat, 0, '?')
-            topducklist = [int(td)]
-            vx += 1
-            continue
+        td = bot.gettok(rdat, 0, '?')
+        topducklist.append(int(td))
+        vx += 1
+        continue
 
     # sort the top 5 scores in order
     topducklist.sort(reverse=True)
