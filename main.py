@@ -1053,7 +1053,7 @@ while 1:
             if data[1] == b'JOIN' and flood_cont is False and duckhunt is True:
                 temp = txt[x].split(b'!')
                 username = temp[0].strip(b':')
-                if str(username) != str(botname.lower()):
+                if pusername != str(botname.lower()):
                     ircnamesrf('0', 'r')
                     irc.send(b'NAMES ' + duckchan + b'\r\n')
                 continue
@@ -1070,7 +1070,7 @@ while 1:
                 temp = txt[x].split(b'!')
                 username = temp[0].strip(b':')
                 # if bot disconnects, reconnects automatically after 5 seconds
-                if str(username) == str(botname.lower()) and data[1] == b'QUIT':
+                if pusername == str(botname.lower()) and data[1] == b'QUIT':
                     exitvar = 'Disconnect'
                     isconnect = False
                     continue
@@ -1078,7 +1078,7 @@ while 1:
                 if flood_cont is True or duckhunt is False:
                     continue
                 # userlist update
-                if str(username) != str(botname.lower()) and data[2].lower() == duckchan:
+                if pusername != str(botname.lower()) and data[2].lower() == duckchan:
                     ircnamesrf('0', 'r')
                     irc.send(b'NAMES ' + duckchan + b'\r\n')
                 continue
@@ -1116,6 +1116,7 @@ while 1:
                 temp = txt[x].split(b'!')
                 username = temp[0].strip(b':')
                 dusername = username.decode()  # for botmaster, admin, ignore, and to fix case sensative bug v1.1.0
+                pusername = dusername  # case-preserved decoded username for cnf keys
                 dusername = dusername.lower()
                 # check is user is a relay v1.1.3
                 if bot.istok(relaybot, dusername, ',') is True and len(data) < 6:
@@ -1133,10 +1134,11 @@ while 1:
                     rbusername = bytes(str(rbusername), 'utf-8')
                     username = rbusername
                     dusername = username.decode()
+                    pusername = dusername  # case-preserved decoded username for cnf keys
                     dusername = dusername.lower()
-                    if bot.cnfexists('duckhunt.cnf', 'ducks', str(username)) is True:
-                        if bot.duckinfo(username, b'inv') != '1':
-                            bot.duckinfo(username, b'inv', '1')
+                    if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is True:
+                        if bot.duckinfo(pusername, b'inv') != '1':
+                            bot.duckinfo(pusername, b'inv', '1')
                     data3 = data[5].lower()
                     if len(data) > 6:
                         data4 = data[6]
@@ -1145,12 +1147,12 @@ while 1:
                     # print('rbusername data: ' + bot.striptext(rbusername) + ' ' + str(data3) + ' ' + str(data4) + ' ' + str(data5))
                     datarelay = True
                 # if user is not relay v1.1.3
-                # rebot = bot.duckinfo(username, b'inv')
+                # rebot = bot.duckinfo(pusername, b'inv')
                 # if datarelay is False and rebot != '0':
-                #    bot.duckinfo(username, b'inv', '0')
-                if datarelay is False and bot.cnfexists('duckhunt.cnf', 'ducks', str(username)) is True:
-                    if bot.duckinfo(username, b'inv') == '1':
-                        bot.duckinfo(username, b'inv', '0')
+                #    bot.duckinfo(pusername, b'inv', '0')
+                if datarelay is False and bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is True:
+                    if bot.duckinfo(pusername, b'inv') == '1':
+                        bot.duckinfo(pusername, b'inv', '0')
                 if bot.istok(botignore, dusername, ',') is True:
                     continue
                 if duckhunt is False and bot.istok(botmaster, dusername, ',') is False and bot.istok(adminlist, dusername, ',') is False:
@@ -1232,7 +1234,7 @@ while 1:
                 if bot.istok(botmaster, str(dusername), ',') is False and bot.istok(adminlist, str(dusername), ',') is False and duckhunt is False:
                     time.sleep(0.5)
                     continue
-                bot.iecheck(str(username))
+                bot.iecheck(pusername)
                 # botignore - update 1.1.0 fix
                 if bot.istok(botignore, str(dusername), ',') is True and botignore != '0':
                     if bot.istok(botmaster, str(dusername), ',') is False and bot.istok(adminlist, str(dusername), ',') is False:
@@ -1645,7 +1647,7 @@ while 1:
                             continue
                         # duckstats
                         if len(data) == 4:
-                            duckstats(username, username)
+                            duckstats(username, pusername)
                             continue
                         # duckstats <username>
                         if len(data) == 5:
@@ -1813,7 +1815,7 @@ while 1:
                                 continue
                             if bot.cnfread('duckhunt.cnf', 'duckhunt', 'botmaster') != '0':
                                 botmaster = bot.cnfread('duckhunt.cnf', 'duckhunt', 'botmaster').lower()
-                                botmaster = bot.addtok(botmaster, str(data5.lower()), ',').lower()
+                                botmaster = bot.addtok(botmaster, data5.decode().lower(), ',').lower()
                             if bot.cnfread('duckhunt.cnf', 'duckhunt', 'botmaster') == '0':
                                 botmaster = str(data5).lower()
                             bot.cnfwrite('duckhunt.cnf', 'duckhunt', 'botmaster', botmaster)
@@ -2049,14 +2051,14 @@ while 1:
 # shop purchases are controlled here
 # ======================================================================================================================
                     if data[3].lower() == b':!shop' or data3 == b'!shop':
-                        if bot.cnfexists('duckhunt.cnf', 'ducks', str(username).lower()) is False:
+                        if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is False:
                             if data3 == b'!shop' and datarelay is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b" :You can't use the shop yet because you haven't played. Shoot some ducks first.\r\n")
                                 continue
                             irc.send(b'NOTICE ' + username + b" :You can't use the shop yet because you haven't played. Shoot some ducks first.\r\n")
                             continue
                         if len(data) == 4 and datarelay is False:
-                            shopmenu(username)
+                            shopmenu(pusername)
                             continue
                         if len(data) > 4 and datarelay is True and data4 == b'':
                             shopmenu(username, 'opt')
@@ -2070,19 +2072,19 @@ while 1:
                                 continue
                             itemid = int(data4)
                             # data prep
-                            ammo = bot.duckinfo(username, b'ammo')
+                            ammo = bot.duckinfo(pusername, b'ammo')
                             rounds = bot.gettok(ammo, 0, '?')
                             mags = bot.gettok(ammo, 1, '?')
                             mrounds = bot.gettok(ammo, 2, '?')
                             mmags = bot.gettok(ammo, 3, '?')
-                            xp = bot.duckinfo(username, b'xp')
-                            # inventory = bot.duckinfo(username, b'inv') - No longer used
-                            gunstats = bot.duckinfo(username, b'guninfo')
+                            xp = bot.duckinfo(pusername, b'xp')
+                            # inventory = bot.duckinfo(pusername, b'inv') - No longer used
+                            gunstats = bot.duckinfo(pusername, b'guninfo')
                             accuracy = bot.gettok(gunstats, 0, '?')
                             reliability = bot.gettok(gunstats, 1, '?')
                             mreliability = bot.gettok(gunstats, 2, '?')
-                            # effects = bot.duckinfo(username, b'effects') - No longer used
-                            breadbox = bot.duckinfo(username, b'bread')
+                            # effects = bot.duckinfo(pusername, b'effects') - No longer used
+                            breadbox = bot.duckinfo(pusername, b'bread')
                             bread = bot.gettok(breadbox, 0, '?')
                             mbread = bot.gettok(breadbox, 1, '?')
                             loaf = bot.gettok(breadbox, 2, '?')
@@ -2107,7 +2109,7 @@ while 1:
                                             irc.send(b'NOTICE ' + username + b' :Based on current rules this item is not available.\r\n')
                                             continue
                                     # can't use it on the bot
-                                    if str(data[5].lower()) == str(botname.lower()) or str(data5.lower()) == str(botname.lower()):
+                                    if data[5].decode().lower() == str(botname.lower()) or data5.decode().lower() == str(botname.lower()):
                                         if data5 != b'' and datarelay is True:
                                             irc.send(b'PRIVMSG ' + duckchan + b' :Nice try ;-)\r\n')
                                             continue
@@ -2119,27 +2121,27 @@ while 1:
                                     if datarelay is True:
                                         if data5 == b'':
                                             continue
-                                        if bot.cnfexists('duckhunt.cnf', 'ducks', str(data5.lower())) is False:
+                                        if bot.cnfexists('duckhunt.cnf', 'ducks', data5.decode().lower()) is False:
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + data5 + b" hasn't played yet.\r\n")
                                             continue
-                                        print('here ' + str(data5.lower()))
-                                        if namecheck(str(data5.decode())) is False and bot.duckinfo(str(data5.lower()), b'inv') == '0':
+                                        print('here ' + data5.decode().lower())
+                                        if namecheck(str(data5.decode())) is False and bot.duckinfo(data5.decode().lower(), b'inv') == '0':
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + data5 + b' is not in the channel.\r\n')
                                             continue
                                     # normal players v1.1.3
                                     if datarelay is False:
-                                        if bot.cnfexists('duckhunt.cnf', 'ducks', str(data[5].lower())) is False:
+                                        if bot.cnfexists('duckhunt.cnf', 'ducks', data[5].decode().lower()) is False:
                                             irc.send(b'NOTICE ' + username + b' :' + data[5] + b" hasn't played yet.\r\n")
                                             continue
-                                        if namecheck(str(data[5].decode())) is False and bot.duckinfo(str(data[5].lower()), b'inv') == '0':
+                                        if namecheck(str(data[5].decode())) is False and bot.duckinfo(data[5].decode().lower(), b'inv') == '0':
                                             irc.send(b'NOTICE ' + username + b' :' + data[5] + b' is not in the channel.\r\n')
                                             continue
                                     # can't use it on yourself
-                                    if str(data[5].lower()) == str(username.lower()) or datarelay is True:
-                                        if datarelay is True and str(data5.lower()) == str(username.lower()):
+                                    if data[5].decode().lower() == dusername or datarelay is True:
+                                        if datarelay is True and data5.decode().lower() == dusername:
                                             irc.send(b'PRIVMSG ' + duckchan + b" :Don't do that to yourself!\r\n")
                                             continue
-                                        if datarelay != True and str(data[5].lower()) == str(username.lower()):
+                                        if datarelay != True and data[5].decode().lower() == dusername:
                                             irc.send(b'NOTICE ' + username + b" :Don't do that to yourself!\r\n")
                                             continue
 # 1 - single bullet ====================================================================================================
@@ -2160,11 +2162,11 @@ while 1:
                                     continue
                                 # shop purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply ammo
                                 rounds = int(rounds) + 1
                                 ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                                bot.duckinfo(username, b'ammo', str(ammo))
+                                bot.duckinfo(pusername, b'ammo', str(ammo))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased a single bullet.\r\n')
@@ -2189,11 +2191,11 @@ while 1:
                                     continue
                                 # shop purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply refill
                                 mags = int(mags) + 1
                                 ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                                bot.duckinfo(username, b'ammo', str(ammo))
+                                bot.duckinfo(pusername, b'ammo', str(ammo))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You refilled 1 magazine.\r\n')
@@ -2218,11 +2220,11 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply reliability restore
                                 reliability = mreliability
                                 gunstats = accuracy + '?' + reliability + '?' + mreliability
-                                bot.duckinfo(username, b'guninfo', str(gunstats))
+                                bot.duckinfo(pusername, b'guninfo', str(gunstats))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b" :Your gun is now cleaned and reliability is restored to maximum.\r\n")
@@ -2237,10 +2239,10 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(username, 'expl_ammo')
+                                bot.data_check(pusername, 'expl_ammo')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)):
-                                    useleft = bot.cnfread('duckhunt.cnf', 'expl_ammo', str(username))
+                                if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername):
+                                    useleft = bot.cnfread('duckhunt.cnf', 'expl_ammo', pusername)
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :You already own Explosive Ammo. [Rounds left: ' + bytes(str(useleft), 'utf-8') + b']\r\n')
                                         continue
@@ -2248,9 +2250,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply rounds 50 rounds
-                                bot.cnfwrite('duckhunt.cnf', 'expl_ammo', str(username), '50')
+                                bot.cnfwrite('duckhunt.cnf', 'expl_ammo', pusername, '50')
                                 # confirmation
                                 if data4 == b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You bought 50 rounds of Explosive Ammo. Increased damage. These rounds are 15% more likely to hit their targets.\r\n')
@@ -2273,7 +2275,7 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Your gun is not currently confiscated.\r\n')
                                     continue
-                                if bot.istok(confiscatedguns, str(username), ',') is False:
+                                if bot.istok(confiscatedguns, pusername, ',') is False:
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :Your gun is not currently confiscated.\r\n')
                                         continue
@@ -2281,12 +2283,12 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # remove confiscation
-                                if confiscatedguns == str(username):
+                                if confiscatedguns == pusername:
                                     confiscatedguns = ''
-                                if bot.istok(confiscatedguns, str(username), ','):
-                                    confiscatedguns = bot.deltok(confiscatedguns, str(username), ',')
+                                if bot.istok(confiscatedguns, pusername, ','):
+                                    confiscatedguns = bot.deltok(confiscatedguns, pusername, ',')
                                 # confirmation
                                 if data4 == b'' and datarelay is True:
                                     irc.send(b'NOTICE ' + username + b' :Your confiscated gun has been returned.\r\n')
@@ -2301,11 +2303,11 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(str(username), 'gun_grease')
+                                bot.data_check(pusername, 'gun_grease')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'gun_grease', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'gun_grease', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.data_check(str(username.lower()), 'gun_grease', 'get')
+                                    timeleft = bot.data_check(pusername, 'gun_grease', 'get')
                                     # (timeleft)
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
@@ -2316,9 +2318,9 @@ while 1:
                                     continue
                                 # shop purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
-                                bot.cnfwrite('duckhunt.cnf', 'gun_grease', str(username), str(time.time()))
+                                bot.cnfwrite('duckhunt.cnf', 'gun_grease', pusername, str(time.time()))
                                 # purchase confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Gun Grease. Lower jamming odds and gun reliability will last longer for 24 hours.\r\n')
@@ -2342,7 +2344,7 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply upgrade
                                 if int(accuracy) < 100:
                                     accuracy = int(accuracy) + 5
@@ -2350,7 +2352,7 @@ while 1:
                                     mreliability = int(mreliability) + 5
                                     reliability = mreliability
                                 gunstats = str(accuracy) + '?' + str(reliability) + '?' + str(mreliability)
-                                bot.duckinfo(username, b'guninfo', gunstats)
+                                bot.duckinfo(pusername, b'guninfo', gunstats)
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You have upgraded your gun. Accuracy and reliability have increased.\r\n')
@@ -2367,10 +2369,10 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(username, 'trigger_lock')
+                                bot.data_check(pusername, 'trigger_lock')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'trigger_lock', str(username)) is True:
-                                    useleft = bot.data_check(str(username), 'trigger_lock', 'get')
+                                if bot.cnfexists('duckhunt.cnf', 'trigger_lock', pusername) is True:
+                                    useleft = bot.data_check(pusername, 'trigger_lock', 'get')
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :You already own Gun Lock. [Remaining Use: ' + bytes(str(useleft), 'utf-8') + b']\r\n')
                                         continue
@@ -2378,9 +2380,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # add entry for max rounds
-                                bot.cnfwrite('duckhunt.cnf', 'trigger_lock', str(username), str(mrounds))
+                                bot.cnfwrite('duckhunt.cnf', 'trigger_lock', pusername, str(mrounds))
                                 # purchase confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Gun Lock. The gun will have a safety lock when no ducks are sighted for ' + bytes(str(mrounds), 'utf-8') + b' uses.\r\n')
@@ -2395,11 +2397,11 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(username, 'silencer')
+                                bot.data_check(pusername, 'silencer')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'silencer', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'silencer', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.data_check(str(username), 'silencer', 'get')
+                                    timeleft = bot.data_check(pusername, 'silencer', 'get')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2409,9 +2411,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
-                                bot.cnfwrite('duckhunt.cnf', 'silencer', str(username), str(time.time()))
+                                bot.cnfwrite('duckhunt.cnf', 'silencer', pusername, str(time.time()))
                                 # purchase confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased a Silencer for your gun. You will not scare away ducks for 24 hours.\r\n')
@@ -2421,12 +2423,12 @@ while 1:
 # 10 - lucky charm =====================================================================================================
                             # update 1.1.0 - changed from double xp to 3-10 random for 24 hours
                             if int(itemid) == 10:
-                                bot.data_check(username, 'lucky_charm')
+                                bot.data_check(pusername, 'lucky_charm')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.gettok(bot.data_check(str(username), 'lucky_charm', 'get'), 0, ',')
-                                    lcxp = bot.gettok(bot.data_check(str(username), 'lucky_charm', 'get'), 1, ',')
+                                    timeleft = bot.gettok(bot.data_check(pusername, 'lucky_charm', 'get'), 0, ',')
+                                    lcxp = bot.gettok(bot.data_check(pusername, 'lucky_charm', 'get'), 1, ',')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2436,10 +2438,10 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
                                 lcxp = random.randint(3,10)
-                                bot.cnfwrite('duckhunt.cnf', 'lucky_charm', str(username), str(time.time()) + ',' + str(lcxp))
+                                bot.cnfwrite('duckhunt.cnf', 'lucky_charm', pusername, str(time.time()) + ',' + str(lcxp))
                                 # purchase confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased a Lucky Charm. You will earn an extra ' + bytes(str(lcxp), 'utf-8') + b' xp for 24 hours.\r\n')
@@ -2448,12 +2450,12 @@ while 1:
                                 continue
 # 11 - sunglasses ======================================================================================================
                             if int(itemid) == 11:
-                                bot.data_check(username, 'sunglasses')
-                                bot.data_check(username, 'bedazzled')
+                                bot.data_check(pusername, 'sunglasses')
+                                bot.data_check(pusername, 'bedazzled')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'sunglasses', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'sunglasses', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.data_check(str(username), 'sunglasses', 'get')
+                                    timeleft = bot.data_check(pusername, 'sunglasses', 'get')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2462,9 +2464,9 @@ while 1:
                                     irc.send(b'NOTICE ' + username + b' :You already own Sunglasses. [Time Remaining: ' + bytes(str(timeval), 'utf-8') + b']\r\n')
                                     continue
                                 # cannot buy sunglasses if currently bedazzled.
-                                if bot.cnfexists('duckhunt.cnf', 'bedazzled', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'bedazzled', pusername) is True:
                                     # add 1 hour timer stuff
-                                    timeleft = bot.data_check(str(username), 'bedazzled', 'get')
+                                    timeleft = bot.data_check(pusername, 'bedazzled', 'get')
                                     timemath = bot.hour1() - math.ceil(time.time() - float(timeleft))
                                     timemath = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2474,9 +2476,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
-                                bot.cnfwrite('duckhunt.cnf', 'sunglasses', str(username), str(time.time()))
+                                bot.cnfwrite('duckhunt.cnf', 'sunglasses', pusername, str(time.time()))
                                 # purchase confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Sunglasses. You are protected from bedazzlement for 24 hours.\r\n')
@@ -2487,7 +2489,7 @@ while 1:
                             # update 1.1.0 - added stuff for duck bombs
                             if int(itemid) == 12:
                                 # not soggy or bombed
-                                if bot.cnfexists('duckhunt.cnf', 'soggy', str(username)) is False and bot.cnfexists('duckhunt.cnf', 'bombed', str(username)) is False:
+                                if bot.cnfexists('duckhunt.cnf', 'soggy', pusername) is False and bot.cnfexists('duckhunt.cnf', 'bombed', pusername) is False:
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :Your clothes are not wet or dirty.\r\n')
                                         continue
@@ -2495,13 +2497,13 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # remove soggy
-                                if bot.cnfexists('duckhunt.cnf', 'soggy', str(username)):
-                                    bot.cnfdelete('duckhunt.cnf', 'soggy', str(username))
+                                if bot.cnfexists('duckhunt.cnf', 'soggy', pusername):
+                                    bot.cnfdelete('duckhunt.cnf', 'soggy', pusername)
                                 # remove bombed
-                                if bot.cnfexists('duckhunt.cnf', 'bombed', str(username)):
-                                    bot.cnfdelete('duckhunt.cnf', 'bombed', str(username))
+                                if bot.cnfexists('duckhunt.cnf', 'bombed', pusername):
+                                    bot.cnfdelete('duckhunt.cnf', 'bombed', pusername)
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased New Clothes. You are no longer soggy and/or duck bombed.\r\n')
                                     continue
@@ -2510,7 +2512,7 @@ while 1:
 # 13 - eyedrops v 1.1.0 ================================================================================================
                             if int(itemid) == 13:
                                 # not bedazzled
-                                if not bot.cnfexists('duckhunt.cnf', 'bedazzled', str(username)):
+                                if not bot.cnfexists('duckhunt.cnf', 'bedazzled', pusername):
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :You are not currently bedazzled.\r\n')
                                         continue
@@ -2518,9 +2520,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # remove bedazzled
-                                bot.cnfdelete('duckhunt.cnf', 'bedazzled', str(username))
+                                bot.cnfdelete('duckhunt.cnf', 'bedazzled', pusername)
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Eye Drops. You are no longer bedazzled.\r\n')
@@ -2548,7 +2550,7 @@ while 1:
                                         continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # target wearing sunglasses!
                                 if bot.cnfexists('duckhunt.cnf', 'sunglasses', str(targetname)) is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Bedazzles ' + targetname + b', with a mirror, but ' + targetname + b' is wearing sunglasses so the mirror has no effect.\r\n')
@@ -2577,7 +2579,7 @@ while 1:
                                 if datarelay is False:
                                     targetname = data[5]
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # reliability reduction
                                 tgunstats = bot.duckinfo(targetname, b'guninfo')
                                 taccuracy = bot.gettok(tgunstats, 0, '?')
@@ -2615,7 +2617,7 @@ while 1:
                                 if bot.cnfexists('duckhunt.cnf', 'rain_coat', str(targetname)) is True:
                                     # purchase
                                     xp = int(xp) - bot.shopprice(username, itemid)
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Dumps a bucket of water on ' + targetname + b', but thanks to a rain coat, ' + targetname + b' is protected from being soggy.\r\n')
                                     continue
                                 # target not wearing a rain coat
@@ -2623,7 +2625,7 @@ while 1:
                                 bot.cnfwrite('duckhunt.cnf', 'soggy', str(targetname), str(time.time()))
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # confirmation
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Dumps a bucket of water on ' + targetname + b'. ' + targetname + b' is now soggy for 1 hour.\r\n')
                                 continue
@@ -2651,7 +2653,7 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # target effects apply - lasts 1 shot
                                 bot.cnfwrite('duckhunt.cnf', 'sabotage', str(targetname), str(True))
                                 # confirmation
@@ -2667,11 +2669,11 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(username, 'accident_insurance')
+                                bot.data_check(pusername, 'accident_insurance')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.data_check(str(username), 'accident_insurance', 'get')
+                                    timeleft = bot.data_check(pusername, 'accident_insurance', 'get')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2681,9 +2683,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
-                                bot.cnfwrite('duckhunt.cnf', 'accident_insurance', str(username), str(time.time()))
+                                bot.cnfwrite('duckhunt.cnf', 'accident_insurance', pusername, str(time.time()))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Accident Insurance. This will prevent gun confiscation for 24 hours.\r\n')
@@ -2715,11 +2717,11 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply bread refill
                                 loaf = int(loaf) + 1
                                 breadbox = str(bread) + '?' + str(mbread) + '?' + str(loaf) + '?' + str(mloaf)
-                                bot.duckinfo(username, b'bread', str(breadbox))
+                                bot.duckinfo(pusername, b'bread', str(breadbox))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased 1 loaf of bread.\r\n')
@@ -2734,10 +2736,10 @@ while 1:
                                         continue
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
-                                bot.data_check(username, 'popcorn')
+                                bot.data_check(pusername, 'popcorn')
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
-                                    popc = bot.cnfread('duckhunt.cnf', 'popcorn', str(username))
+                                if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
+                                    popc = bot.cnfread('duckhunt.cnf', 'popcorn', pusername)
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :You already have a bag of popcorn. [Remaining pieces: ' + bytes(str(popc), 'utf-8') + b']\r\n')
                                         continue
@@ -2745,9 +2747,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply popcorn ammo
-                                bot.cnfwrite('duckhunt.cnf', 'popcorn', str(username), '50')
+                                bot.cnfwrite('duckhunt.cnf', 'popcorn', pusername, '50')
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased a Bag of Popcorn. You can now have better luck at befriending ducks for 50 pieces.\r\n')
@@ -2763,8 +2765,8 @@ while 1:
                                     irc.send(b'NOTICE ' + username + b' :Based on current game rules, this item is not available.\r\n')
                                     continue
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'bread_lock', str(username)):
-                                    useleft = bot.cnfread('duckhunt.cnf', 'bread_lock', str(username))
+                                if bot.cnfexists('duckhunt.cnf', 'bread_lock', pusername):
+                                    useleft = bot.cnfread('duckhunt.cnf', 'bread_lock', pusername)
                                     if data4 != b'' and datarelay is True:
                                         irc.send(b'PRIVMSG ' + duckchan + b' :You already own Bread Box Lock. [Remaining uses: ' + bytes(str(useleft), 'utf-8') + b']\r\n')
                                         continue
@@ -2772,9 +2774,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply bread box lock
-                                bot.cnfwrite('duckhunt.cnf', 'bread_lock', str(username), str(mbread))
+                                bot.cnfwrite('duckhunt.cnf', 'bread_lock', pusername, str(mbread))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Bread Box Lock. You can not toss bread when no ducks are around for' + bytes(str(mbread), 'utf-8') + b' uses.\r\n')
@@ -2783,12 +2785,12 @@ while 1:
                                 continue
 # 22 - rain coat - prevents soggy and duck bombing =====================================================================
                             if int(itemid) == 22:
-                                bot.data_check(username, 'soggy')
-                                bot.data_check(username, 'rain_coat')
+                                bot.data_check(pusername, 'soggy')
+                                bot.data_check(pusername, 'rain_coat')
                                 # currently soggy
-                                if bot.cnfexists('duckhunt.cnf', 'soggy', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'soggy', pusername) is True:
                                     # 1 hour timer calculation
-                                    timeleft = bot.data_check(username, 'soggy', 'get')
+                                    timeleft = bot.data_check(pusername, 'soggy', 'get')
                                     timemath = bot.hour1() - math.ceil(time.time() - float(timeleft))
                                     timemath = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2797,9 +2799,9 @@ while 1:
                                     irc.send(b'NOTICE ' + username + b' :You are currently soggy and cannot purchase Rain Coat until you are dry. [Time Remaining: ' + bytes(str(timemath), 'utf-8') + b']\r\n')
                                     continue
                                 # already own this item
-                                if bot.cnfexists('duckhunt.cnf', 'rain_coat', str(username)) is True:
+                                if bot.cnfexists('duckhunt.cnf', 'rain_coat', pusername) is True:
                                     # 24 hour timer calculation
-                                    timeleft = bot.data_check(str(username), 'rain_coat', 'get')
+                                    timeleft = bot.data_check(pusername, 'rain_coat', 'get')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2809,9 +2811,9 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # adding time entry (24 hours)
-                                bot.cnfwrite('duckhunt.cnf', 'rain_coat', str(username), str(time.time()))
+                                bot.cnfwrite('duckhunt.cnf', 'rain_coat', pusername, str(time.time()))
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased Rain Coat. This will protect against water buckets and duck bombs for 24 hours.\r\n')
                                     continue
@@ -2835,11 +2837,11 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 # apply upgrade
                                 mrounds = int(mrounds) + 1
                                 ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                                bot.duckinfo(username, b'ammo', str(ammo))
+                                bot.duckinfo(pusername, b'ammo', str(ammo))
                                 # confirmation
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You upgraded your magazines! They can now hold ' + bytes(str(mrounds), 'utf-8') + b' rounds.\r\n')
@@ -2864,10 +2866,10 @@ while 1:
                                     continue
                                 # purchase
                                 xp = int(xp) - bot.shopprice(username, itemid)
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
                                 mmags = int(mmags) + 1
                                 ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                                bot.duckinfo(username, b'ammo', str(ammo))
+                                bot.duckinfo(pusername, b'ammo', str(ammo))
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You purchased an additional magazine, you can now carry ' + bytes(str(mmags), 'utf-8') + b' magazines.\r\n')
                                     continue
@@ -2880,7 +2882,7 @@ while 1:
 # ======================================================================================================================
                     if data[3].lower() == b':!swim' or data3.lower() == b'!swim':
                         # haven't played yet
-                        if not bot.cnfexists('duckhunt.cnf', 'ducks', str(username)):
+                        if not bot.cnfexists('duckhunt.cnf', 'ducks', pusername):
                             if data3 != b'' and datarelay is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b" :You haven't played yet. Shoot some ducks first.\r\n")
                                 continue
@@ -2888,8 +2890,8 @@ while 1:
                             continue
 
                         # set data
-                        xp = bot.duckinfo(username, b'xp')
-                        level = bot.duckinfo(username, b'level')
+                        xp = bot.duckinfo(pusername, b'xp')
+                        level = bot.duckinfo(pusername, b'level')
 
                         # deterimine xp subtract
                         rxp = 2
@@ -2902,15 +2904,15 @@ while 1:
                         # deduct xp
                         if int(rxp) >= int(xp):
                             xp = 0
-                            bot.duckinfo(username, b'xp', str(xp))
+                            bot.duckinfo(pusername, b'xp', str(xp))
                         if int(rxp) < int(xp):
                             xp = int(xp) - int(rxp)
-                            bot.duckinfo(username, b'xp', str(xp))
+                            bot.duckinfo(pusername, b'xp', str(xp))
                         # apply soggy
-                        bot.cnfwrite('duckhunt.cnf', 'soggy', str(username), str(time.time()))
+                        bot.cnfwrite('duckhunt.cnf', 'soggy', pusername, str(time.time()))
                         # wash duck bomb off
-                        if bot.cnfexists('duckhunt.cnf', 'bombed', str(username)):
-                            bot.cnfdelete('duckhunt.cnf', 'bombed', str(username))
+                        if bot.cnfexists('duckhunt.cnf', 'bombed', pusername):
+                            bot.cnfdelete('duckhunt.cnf', 'bombed', pusername)
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Jumps into the duck pond, and rinses off the duck bombs, but ' + username + b' is now soggy for 1 hour \x034[-' + bytes(str(rxp), 'utf-8') + b' xp]\r\n')
                             continue
                         # confirmation
@@ -2923,15 +2925,15 @@ while 1:
                         if len(data) == 5 or data4 != b'':
 
                             # user hasn't played
-                            if bot.cnfexists('duckhunt.cnf', 'ducks', str(username)) is False:
-                                irc.send(b'PRIVMSG ' + duckchan + b' :' + bytes(str(username), 'utf-8') + b' > You have not played yet.\r\n')
+                            if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is False:
+                                irc.send(b'PRIVMSG ' + duckchan + b' :' + bytes(pusername, 'utf-8') + b' > You have not played yet.\r\n')
                                 continue
 
                             # recently hit limit within last 24 hours
-                            if bot.cnfexists('duckhunt.cnf', 'duck_bomb', str(username)):
-                                bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', str(username)), 1, ',')
+                            if bot.cnfexists('duckhunt.cnf', 'duck_bomb', pusername):
+                                bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', pusername), 1, ',')
                                 if int(bombent) == 0:
-                                    timeleft = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', str(username)), 0, ',')
+                                    timeleft = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', pusername), 0, ',')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -2941,7 +2943,7 @@ while 1:
                                     continue
 
                             # not enough duck friends
-                            friend = bot.duckinfo(str(username), b'friend')
+                            friend = bot.duckinfo(pusername, b'friend')
                             if int(friend) < 50:
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b' :You do not have enough duck friends to this. For 1 duck bomb you need 50 duck friends. You currently have: ' + bytes(str(friend), 'utf-8') + b' duck friends.\r\n')
@@ -2958,16 +2960,16 @@ while 1:
                                 continue
 
                             # target hasn't played (relay bots v1.1.3)
-                            if not bot.cnfexists('duckhunt.cnf', 'ducks', str(data4.lower())) and data4 != b'' and datarelay is True:
+                            if not bot.cnfexists('duckhunt.cnf', 'ducks', data4.decode().lower()) and data4 != b'' and datarelay is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + data4 + b' has not played yet.\r\n')
                                 continue
                             # target hasn't played
-                            if not bot.cnfexists('duckhunt.cnf', 'ducks', str(data[4].lower())) and data4 == b'' and datarelay is False:
+                            if not bot.cnfexists('duckhunt.cnf', 'ducks', data[4].decode().lower()) and data4 == b'' and datarelay is False:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + data[4] + b' has not played yet.\r\n')
                                 continue
 
                             # can't bomb yourself
-                            if str(data[4].lower()) == str(username.lower()) or str(data4.lower()) == str(username.lower()):
+                            if data[4].decode().lower() == dusername or data4.decode().lower() == dusername:
                                 if data4 != b'' and datarelay is True:
                                     irc.send(b'PRIVMSG ' + duckchan + b" :Don't do that to yourself!\r\n")
                                     continue
@@ -2975,32 +2977,32 @@ while 1:
                                 continue
 
                             # user isn't on the channel (relay bots v1.1.3)
-                            if not namecheck(str(data4.decode())) and data4 != b'' and datarelay is True and bot.duckinfo(str(data4.lower()), b'inv') == '0':
+                            if not namecheck(str(data4.decode())) and data4 != b'' and datarelay is True and bot.duckinfo(data4.decode().lower(), b'inv') == '0':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + data4 + b' is not in the channel.\r\n')
                                 continue
                             # user isn't on the channel
-                            if not namecheck(str(data[4].decode())) and datarelay is False and bot.duckinfo(str(data[4].lower()), b'inv') == '0':
+                            if not namecheck(str(data[4].decode())) and datarelay is False and bot.duckinfo(data[4].decode().lower(), b'inv') == '0':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + data[4] + b' is not in the channel.\r\n')
                                 continue
 
                             # target is already bombed (relay bots v1.1.3)
-                            if bot.cnfexists('duckhunt.cnf', 'bombed', str(data4).lower()) is True and datarelay is True:
+                            if bot.cnfexists('duckhunt.cnf', 'bombed', data4.decode().lower()) is True and datarelay is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + bytes(str(data4.decode()), 'utf-8') + b' is currently bombed.\r\n')
                                 continue
                             # target is already bombed
-                            if bot.cnfexists('duckhunt.cnf', 'bombed', str(data[4]).lower()) is True and datarelay is False:
+                            if bot.cnfexists('duckhunt.cnf', 'bombed', data[4].decode().lower()) is True and datarelay is False:
                                 irc.send(b'NOTICE ' + username + b' :' + bytes(str(data[4].decode()), 'utf-8') + b' is currently bombed.\r\n')
                                 continue
                             # determine duck bombs
                             # check if user duck bombing limit in last 24 hours
-                            friend = bot.duckinfo(username, b'friend')
-                            bot.data_check(str(username.lower()), 'duck_bomb')
+                            friend = bot.duckinfo(pusername, b'friend')
+                            bot.data_check(pusername, 'duck_bomb')
 
-                            if bot.cnfexists('duckhunt.cnf', 'duck_bomb', str(username.lower())):
-                                bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', str(username)), 1, ',')
+                            if bot.cnfexists('duckhunt.cnf', 'duck_bomb', pusername):
+                                bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', pusername), 1, ',')
                                 # user at limit of duck bombs in 24 hours
                                 if int(bombent) == 0:
-                                    timeleft = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', str(username)), 0, ',')
+                                    timeleft = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', pusername), 0, ',')
                                     timemath = bot.hour24() - (math.ceil(time.time()) - float(timeleft))
                                     timeval = bot.timeconvertmsg(timemath)
                                     if data4 != b'' and datarelay is True:
@@ -3010,35 +3012,35 @@ while 1:
                                     continue
                                 if int(bombent) > 0:
                                     bombent = int(bombent) - 1
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',' + str(bombent))
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',' + str(bombent))
 
-                            if not bot.cnfexists('duckhunt.cnf', 'duck_bomb', str(username)):
+                            if not bot.cnfexists('duckhunt.cnf', 'duck_bomb', pusername):
                                 if 50 <= int(friend) < 100:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',0')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',0')
                                 if 100 <= int(friend) < 150:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',1')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',1')
                                 if 150 <= int(friend) < 200:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',2')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',2')
                                 if 200 <= int(friend) < 300:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',3')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',3')
                                 if 300 <= int(friend) < 400:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',4')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',4')
                                 if 400 <= int(friend) < 1000:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',5')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',5')
                                 if int(friend) >= 1000:
-                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', str(username), str(time.time()) + ',10')
+                                    bot.cnfwrite('duckhunt.cnf', 'duck_bomb', pusername, str(time.time()) + ',10')
 
-                            bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', str(username)), 1, ',')
+                            bombent = bot.gettok(bot.cnfread('duckhunt.cnf', 'duck_bomb', pusername), 1, ',')
 
                             # target has rain coat (relay bots v1.1.3)
                             if data4 != b'' and datarelay is True:
-                                bot.data_check(str(data4.lower()), 'rain_coat')
+                                bot.data_check(data4.decode().lower(), 'rain_coat')
                                 # target does not have rain coat
-                                if not bot.cnfexists('duckhunt.cnf', 'rain_coat', str(data4.lower())):
-                                    bot.cnfwrite('duckhunt.cnf', 'bombed', str(data4.lower()), str(True))
+                                if not bot.cnfexists('duckhunt.cnf', 'rain_coat', data4.decode().lower()):
+                                    bot.cnfwrite('duckhunt.cnf', 'bombed', data4.decode().lower(), str(True))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Calls in a duck bombing on ' + data4 + b'. A squadron of 50 duck friends, flying in formation, swoop down dropping gooey duck bombs all over ' + data4 + b' causing the player to require new clothes!\r\n')
-                                if bot.cnfexists('duckhunt.cnf', 'rain_coat', str(data4.lower())):
-                                    bot.cnfdelete('duckhunt.cnf', 'rain_coat', str(data4.lower()))
+                                if bot.cnfexists('duckhunt.cnf', 'rain_coat', data4.decode().lower()):
+                                    bot.cnfdelete('duckhunt.cnf', 'rain_coat', data4.decode().lower())
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Calls in a duck bombing on ' + data4 + b' A squadron of 50 duck friends, flying in formation, swoop down dropping duck bombs all over ' + data4 + b'. Thanks to a Rain Coat ' + data4 + b' is shielded from the duck bombs, but can no longer use this Rain Coat.\r\n')
 
                                 if int(bombent) == 0:
@@ -3053,14 +3055,14 @@ while 1:
                                 continue
 
                             # normal rain coat
-                            bot.data_check(str(data[4].lower()), 'rain_coat')
+                            bot.data_check(data[4].decode().lower(), 'rain_coat')
                             # does not have rain coat
-                            if not bot.cnfexists('duckhunt.cnf', 'rain_coat', str(data[4].lower())):
-                                bot.cnfwrite('duckhunt.cnf', 'bombed', str(data[4].lower()), str(True))
+                            if not bot.cnfexists('duckhunt.cnf', 'rain_coat', data[4].decode().lower()):
+                                bot.cnfwrite('duckhunt.cnf', 'bombed', data[4].decode().lower(), str(True))
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Calls in a duck bombing on ' + data[4] + b'. A squadron of 50 duck friends, flying in formation, swoop down dropping gooey duck bombs all over ' + data[4] + b' causing the player to require new clothes!\r\n')
                             # has rain coat
-                            if bot.cnfexists('duckhunt.cnf', 'rain_coat', str(data[4].lower())):
-                                bot.cnfdelete('duckhunt.cnf', 'rain_coat', str(data[4].lower()))
+                            if bot.cnfexists('duckhunt.cnf', 'rain_coat', data[4].decode().lower()):
+                                bot.cnfdelete('duckhunt.cnf', 'rain_coat', data[4].decode().lower())
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Calls in a duck bombing on ' + data[4] + b' A squadron of 50 duck friends, flying in formation, swoop down dropping duck bombs all over ' + data[4] + b'. Thanks to a Rain Coat ' + data[4] + b' is shielded from the duck bombs, but can no longer use this Rain Coat.\r\n')
 
                             if int(bombent) == 0:
@@ -3102,7 +3104,7 @@ while 1:
                                 duckstats(username, username, 'opt')
                                 continue
                             if datarelay is False:
-                                duckstats(username, username)
+                                duckstats(username, pusername)
                                 continue
                         if len(data) == 5 or data4 != b'':
                             if data4 != b'' and datarelay is True:
@@ -3122,24 +3124,24 @@ while 1:
                         if bot.istok(botmaster, str(dusername), ',') is False and bot.istok(adminlist, str(dusername), ',') is False:
                             continue
                         if len(data) == 5 or data4 != b'':
-                            if bot.istok(confiscatedguns, str(data[4]), ',') is True and datarelay is False:
+                            if bot.istok(confiscatedguns, data[4].decode(), ',') is True and datarelay is False:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + data[4] + b"'s gun is already confiscated.\r\n")
                                 continue
-                            if datarelay is True and data4 != b'' and bot.istok(confiscatedguns, str(data4), ',') is True:
+                            if datarelay is True and data4 != b'' and bot.istok(confiscatedguns, data4.decode(), ',') is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + data4 + b"'s gun is already confiscated.\r\n")
                                 continue
 
                             # gun confiscation
                             if confiscatedguns != '':
                                 if data3 != b'' and data4 != b'':
-                                    confiscatedguns = str(confiscatedguns) + ',' + str(data4)
+                                    confiscatedguns = confiscatedguns + ',' + data4.decode()
                                 else:
-                                    confiscatedguns = str(confiscatedguns) + ',' + str(data[4])
+                                    confiscatedguns = confiscatedguns + ',' + data[4].decode()
                             if confiscatedguns == '':
                                 if data3 != b'' and data4 != b'':
-                                    confiscatedguns = str(data4)
+                                    confiscatedguns = data4.decode()
                                 else:
-                                    confiscatedguns = str(data[4])
+                                    confiscatedguns = data[4].decode()
 
                             # message confirmation
                             if data3 != b'' and data4 != b'':
@@ -3159,13 +3161,13 @@ while 1:
                             continue
                         # !rearm
                         if len(data) == 4 or data3 != b'':
-                            if bot.istok(confiscatedguns, str(username), ',') is False and data4 == b'':
+                            if bot.istok(confiscatedguns, pusername, ',') is False and data4 == b'':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Your gun is not confiscated.\r\n')
                                 continue
                             if bot.numtok(confiscatedguns, ',') == 1:
                                 confiscatedguns = ''
                             if bot.numtok(confiscatedguns, ',') > 1:
-                                confiscatedguns = bot.deltok(confiscatedguns, str(username), ',')
+                                confiscatedguns = bot.deltok(confiscatedguns, pusername, ',')
                             if data3 != b'' and data4 == b'':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :\x01ACTION returns ' + username + b"'s gun.\x01\r\n")
                                 continue
@@ -3177,19 +3179,19 @@ while 1:
                                 confiscatedguns = ''
                                 irc.send(b'PRIVMSG ' + duckchan + b' :\x01ACTION returns all confiscated guns to the hunters.\x01\r\n')
                                 continue
-                            if bot.istok(confiscatedguns, str(data[4]), ',') is False and datarelay is False:
+                            if bot.istok(confiscatedguns, data[4].decode(), ',') is False and datarelay is False:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + data[4] + b"'s gun is not confiscated.\r\n")
                                 continue
-                            if datarelay is True and data4 != b'' and bot.istok(confiscatedguns, str(data4), ',') is False:
+                            if datarelay is True and data4 != b'' and bot.istok(confiscatedguns, data4.decode(), ',') is False:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + data4 + b"'s gun is not confiscated.\r\n")
                                 continue
                             if bot.numtok(confiscatedguns, ',') == 1:
                                 confiscatedguns = ''
                             if bot.numtok(confiscatedguns, ',') > 1:
                                 if data4 != b'' and datarelay is True:
-                                    confiscatedguns = bot.deltok(confiscatedguns, str(data4), ',')
+                                    confiscatedguns = bot.deltok(confiscatedguns, data4.decode(), ',')
                                 else:
-                                    confiscatedguns = bot.deltok(confiscatedguns, str(data[4]), ',')
+                                    confiscatedguns = bot.deltok(confiscatedguns, data[4].decode(), ',')
                             if data4 != b'':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :\x01ACTION returns ' + data4 + b"'s gun.\x01\r\n")
                                 continue
@@ -3203,30 +3205,30 @@ while 1:
                             continue
                         # check if players gun is confiscated
                         gunconf = bot.cnfread('duckhunt.cnf', 'rules', 'gunconf')
-                        if bot.istok(confiscatedguns, str(username), ',') is True and gunconf == 'on':
+                        if bot.istok(confiscatedguns, pusername, ',') is True and gunconf == 'on':
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x034You are not armed.\x03\r\n')
                             continue
                         # unjam gun
-                        if bot.istok(jammedguns, str(username), ',') is True:
+                        if bot.istok(jammedguns, pusername, ',') is True:
                             if bot.numtok(jammedguns, ',') == 1:
                                 jammedguns = ''
                             if bot.numtok(jammedguns, ',') > 1:
-                                jammedguns = bot.deltok(jammedguns, str(username), ',')
-                            bot.cnfwrite('duckhunt.cnf', 'duck_jam', str(username), '0')
+                                jammedguns = bot.deltok(jammedguns, pusername, ',')
+                            bot.cnfwrite('duckhunt.cnf', 'duck_jam', pusername, '0')
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x0314*Crr..CLICK*\x03     You unjam your gun.\r\n")
                             continue
                         # new users with no stats, gun doesn't need to be reloaded
-                        if bot.cnfexists('duckhunt.cnf', 'ducks', str(username)) is False:
+                        if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is False:
                             if infammo == 'on':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > Your gun doesn't need to be reloaded. | Rounds: 7/7 | Magazines: \x02\x033Inf\x02\x03\r\n")
                             if infammo == 'off':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > Your gun doesn't need to be reloaded. | Rounds: 7/7 | Magazines: 3/3\r\n")
                             continue
                         # reloading gun
-                        rounds = bot.gettok(bot.duckinfo(username, b'ammo'), 0, '?')
-                        mags = bot.gettok(bot.duckinfo(username, b'ammo'), 1, '?')
-                        mrounds = bot.gettok(bot.duckinfo(username, b'ammo'), 2, '?')
-                        mmags = bot.gettok(bot.duckinfo(username, b'ammo'), 3, '?')
+                        rounds = bot.gettok(bot.duckinfo(pusername, b'ammo'), 0, '?')
+                        mags = bot.gettok(bot.duckinfo(pusername, b'ammo'), 1, '?')
+                        mrounds = bot.gettok(bot.duckinfo(pusername, b'ammo'), 2, '?')
+                        mmags = bot.gettok(bot.duckinfo(pusername, b'ammo'), 3, '?')
                         if int(rounds) == 0:
                             # out of magazines
                             if int(mags) == 0 and infammo == 'off':
@@ -3238,7 +3240,7 @@ while 1:
                                 mags = str(mags)
                             rounds = mrounds
                             ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                            bot.duckinfo(username, b'ammo', ammo)
+                            bot.duckinfo(pusername, b'ammo', ammo)
                             if infammo == 'on':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x0314*CLACK CLACK*\x03     You reload. | Rounds: " + rounds.encode() + b'/' + mrounds.encode() + b' | Magazines: \x02\x033Inf\x02\x03\r\n')
                             if infammo == 'off':
@@ -3262,63 +3264,63 @@ while 1:
                         # b'playername' = Rounds?Mags?MaxRounds?MaxMags,Ducks,GoldenDucks,xp,level,levelup,
                         #                 notusedanymore,notusedanymore,Accuracy?Reliability?MaxReliability,BestTime,
                         #                 Accidents,Bread?MaxBread,Loaf,MaxLoaf,DuckFriends
-                        if not bot.cnfexists('duckhunt.cnf', 'ducks', str(username)):
+                        if not bot.cnfexists('duckhunt.cnf', 'ducks', pusername):
                             dinfo = '7?3?7?3,0,0,0,1,200,0,0,75?80?80,0,0,12?12?3?3,0'
-                            bot.cnfwrite('duckhunt.cnf', 'ducks', str(username), str(dinfo))
+                            bot.cnfwrite('duckhunt.cnf', 'ducks', pusername, str(dinfo))
                             bot.cnfwrite('duckhunt.cnf', 'ducks', 'cache', '1')
 
                         # gun is confiscated
                         gunconf = bot.cnfread('duckhunt.cnf', 'rules', 'gunconf')
-                        if bot.istok(confiscatedguns, str(username), ',') and gunconf == 'on':
+                        if bot.istok(confiscatedguns, pusername, ',') and gunconf == 'on':
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x034You are not armed.\x03\r\n')
                             continue
 
                         # player is bombed
-                        if bot.cnfexists('duckhunt.cnf', 'bombed', str(username).lower()):
+                        if bot.cnfexists('duckhunt.cnf', 'bombed', pusername):
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x034Your clothes are crusty and filthy from being duck bombed. You cannot hunt ducks like this, you need new clothes.\r\n')
                             continue
 
                         # player is soggy
-                        bot.data_check(username, 'soggy')
-                        if bot.cnfexists('duckhunt.cnf', 'soggy', str(username)):
+                        bot.data_check(pusername, 'soggy')
+                        if bot.cnfexists('duckhunt.cnf', 'soggy', pusername):
                             # determine time remaining
                             # 1 hour timer calculation
-                            timeleft = bot.data_check(str(username), 'soggy', 'get')
+                            timeleft = bot.data_check(pusername, 'soggy', 'get')
                             timemath = bot.hour1() - math.ceil(time.time() - float(timeleft))
                             timemath = bot.timeconvertmsg(timemath)
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x034Your clothes are all soggy. You cannot hunt ducks until you're dry. \x033[Time Remaining: " + bytes(str(timemath), 'utf-8') + b']\x03\r\n')
                             continue
 
                         # player is sabotaged v 1.1.4 fixed sabotage bug (modified this statement and made an additional statement below)
-                        if bot.cnfexists('duckhunt.cnf', 'sabotage', str(username).lower()) is True and bot.cnfexists('duckhunt.cnf', 'trigger_lock', str(username).lower()) is False and duck_exists() is False:
-                            bot.cnfdelete('duckhunt.cnf', 'sabotage', str(username).lower())
+                        if bot.cnfexists('duckhunt.cnf', 'sabotage', pusername) is True and bot.cnfexists('duckhunt.cnf', 'trigger_lock', pusername) is False and duck_exists() is False:
+                            bot.cnfdelete('duckhunt.cnf', 'sabotage', pusername)
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*CLICK PFFFFT*\x03     \x034Your gun was sabotaged.\x03\r\n')
                             continue
                         # v 1.1.4 fix
-                        if bot.cnfexists('duckhunt.cnf', 'sabotage', str(username).lower()) is True and duck_exists() is True:
-                            bot.cnfdelete('duckhunt.cnf', 'sabotage', str(username).lower())
+                        if bot.cnfexists('duckhunt.cnf', 'sabotage', pusername) is True and duck_exists() is True:
+                            bot.cnfdelete('duckhunt.cnf', 'sabotage', pusername)
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*CLICK PFFFFT*\x03     \x034Your gun was sabotaged.\x03\r\n')
                             continue
 
                         # shooting data
-                        ammo = bot.duckinfo(username, b'ammo')
+                        ammo = bot.duckinfo(pusername, b'ammo')
                         rounds = bot.gettok(ammo, 0, '?')
                         mrounds = bot.gettok(ammo, 2, '?')
                         mags = bot.gettok(ammo, 1, '?')
                         mmags = bot.gettok(ammo, 3, '?')
                         # gun data
-                        guninfo = bot.duckinfo(username, b'guninfo')
+                        guninfo = bot.duckinfo(pusername, b'guninfo')
                         accuracy = bot.gettok(guninfo, 0, '?')
                         reliability = bot.gettok(guninfo, 1, '?')
                         mreliability = bot.gettok(guninfo, 2, '?')
                         # player data
-                        xp = bot.duckinfo(username, b'xp')
-                        best = bot.duckinfo(username, b'best')
-                        ducks = bot.duckinfo(username, b'ducks')
-                        gducks = bot.duckinfo(username, b'gducks')
-                        accidents = bot.duckinfo(username, b'accidents')
-                        level = bot.duckinfo(username, b'level')
-                        levelup = bot.duckinfo(username, b'levelup')
+                        xp = bot.duckinfo(pusername, b'xp')
+                        best = bot.duckinfo(pusername, b'best')
+                        ducks = bot.duckinfo(pusername, b'ducks')
+                        gducks = bot.duckinfo(pusername, b'gducks')
+                        accidents = bot.duckinfo(pusername, b'accidents')
+                        level = bot.duckinfo(pusername, b'level')
+                        levelup = bot.duckinfo(pusername, b'levelup')
 
                         # player gun needs service
                         if float(reliability) <= 60:
@@ -3334,84 +3336,84 @@ while 1:
                             continue
 
                         # Gun Lock
-                        bot.data_check(str(username), 'trigger_lock')
-                        if bot.cnfexists('duckhunt.cnf', 'trigger_lock', str(username)) is True and duck_exists() is False:
-                            useleft = bot.cnfread('duckhunt.cnf', 'trigger_lock', str(username))
+                        bot.data_check(pusername, 'trigger_lock')
+                        if bot.cnfexists('duckhunt.cnf', 'trigger_lock', pusername) is True and duck_exists() is False:
+                            useleft = bot.cnfread('duckhunt.cnf', 'trigger_lock', pusername)
                             if int(useleft) == 1:
                                 useleft = '0'
-                                bot.cnfdelete('duckhunt.cnf', 'trigger_lock', str(username))
+                                bot.cnfdelete('duckhunt.cnf', 'trigger_lock', pusername)
                             if int(useleft) > 1:
                                 useleft = int(useleft) - 1
-                                bot.cnfwrite('duckhunt.cnf', 'trigger_lock', str(username), str(useleft))
+                                bot.cnfwrite('duckhunt.cnf', 'trigger_lock', pusername, str(useleft))
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*CLICK*\x03    \x034GUN LOCKED   [' + bytes(str(useleft), 'utf-8') + b']\x03\r\n')
                             continue
 
                         # jammed gun
-                        if not bot.cnfexists('duckhunt.cnf', 'duck_jam', str(username)) or bot.istok(jammedguns, str(username), ','):
+                        if not bot.cnfexists('duckhunt.cnf', 'duck_jam', pusername) or bot.istok(jammedguns, pusername, ','):
                             # gun grease update 1.1.0 - added lower jamming odds to gun grease (reliability +10)
                             #                           and adjusted jamming parameters to reduce frequent jamming
-                            bot.data_check(str(username), 'gun_grease')
+                            bot.data_check(pusername, 'gun_grease')
                             jam = round(float(reliability))
                             jammed = random.randint(1, 100)
 
                             if 70 >= int(jam) > 60:
-                                if bot.cnfexists('duckhunt.cnf', 'gun_grease', str(username)):
+                                if bot.cnfexists('duckhunt.cnf', 'gun_grease', pusername):
                                     jam = jam + 13
                                     jammed = random.randint(1, int(jam))
-                                if not bot.cnfexists('duckhunt.cnf', 'gun_grease', str(username)):
+                                if not bot.cnfexists('duckhunt.cnf', 'gun_grease', pusername):
                                     jam = jam + 25
                                     jammed = random.randint(1, int(jam))
 
-                            if jammed >= float(reliability) or bot.istok(jammedguns, str(username), ',') is True:
+                            if jammed >= float(reliability) or bot.istok(jammedguns, pusername, ',') is True:
                                 if jammedguns == '':
-                                    jammedguns = str(username)
+                                    jammedguns = pusername
                                 else:
-                                    jammedguns = str(jammedguns) + ',' + str(username)
+                                    jammedguns = str(jammedguns) + ',' + pusername
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*CLACK*\x03     \x034Your gun is jammed, you must reload to unjam it...\x03\r\n')
                                 continue
 
                         # not jammed
-                        if bot.cnfexists('duckhunt.cnf', 'duck_jam', str(username)):
-                            bot.cnfdelete('duckhunt.cnf', 'duck_jam', str(username))
+                        if bot.cnfexists('duckhunt.cnf', 'duck_jam', pusername):
+                            bot.cnfdelete('duckhunt.cnf', 'duck_jam', pusername)
 
                         # fired a round
                         rounds = int(rounds) - 1
 
                         # ammo deduction
                         ammo = str(rounds) + '?' + str(mags) + '?' + str(mrounds) + '?' + str(mmags)
-                        bot.duckinfo(username, b'ammo', ammo)
+                        bot.duckinfo(pusername, b'ammo', ammo)
 
                         # has expl ammo
-                        bot.data_check(str(username), 'expl_ammo')
-                        if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)):
-                            expammo = bot.cnfread('duckhunt.cnf', 'expl_ammo', str(username))
+                        bot.data_check(pusername, 'expl_ammo')
+                        if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername):
+                            expammo = bot.cnfread('duckhunt.cnf', 'expl_ammo', pusername)
                             if int(expammo) > 0:
                                 expammo = int(expammo) - 1
-                                bot.cnfwrite('duckhunt.cnf', 'expl_ammo', str(username), str(expammo))
+                                bot.cnfwrite('duckhunt.cnf', 'expl_ammo', pusername, str(expammo))
                                 # extra wear for ammo type
                                 reliability = float(reliability) - 0.03
 
                         # Reliability deduction
-                        bot.data_check(str(username), 'gun_grease')
+                        bot.data_check(pusername, 'gun_grease')
 
                         # does not have gun grease
-                        if not bot.cnfexists('duckhunt.cnf', 'gun_grease', str(username)):
+                        if not bot.cnfexists('duckhunt.cnf', 'gun_grease', pusername):
                             reliability = float(reliability) - 0.1
 
                         # has gun grerase
-                        if bot.cnfexists('duckhunt.cnf', 'gun_grease', str(username)):
+                        if bot.cnfexists('duckhunt.cnf', 'gun_grease', pusername):
                             reliability = float(reliability) - 0.01
 
                         reliability = round(reliability, 2)
                         guninfo = str(accuracy) + '?' + str(reliability) + '?' + str(mreliability)
-                        bot.duckinfo(username, b'guninfo', guninfo)
+                        bot.duckinfo(pusername, b'guninfo', guninfo)
 
                         # duck exists
                         if duck_exists():
 
                             # duck fear management
-                            bot.data_check(username, 'silencer')
-                            if not bot.cnfexists('duckhunt.cnf', 'silencer', str(username)):
+                            bot.data_check(pusername, 'silencer')
+                            if not bot.cnfexists('duckhunt.cnf', 'silencer', pusername):
 
                                 if not fear_factor:
                                     fear_factor = 0
@@ -3433,11 +3435,11 @@ while 1:
                                     fear_factor = fear_factor + scare
 
                             # check if player is bedazzled
-                            bot.data_check(username, 'bedazzled')
-                            if bot.cnfexists('duckhunt.cnf', 'bedazzled', str(username)):
+                            bot.data_check(pusername, 'bedazzled')
+                            if bot.cnfexists('duckhunt.cnf', 'bedazzled', pusername):
                                 # player is bedazzled
                                 accidents = int(accidents) + 1
-                                bot.duckinfo(username, b'accidents', str(accidents))
+                                bot.duckinfo(pusername, b'accidents', str(accidents))
 
                                 damage = ''
                                 dmg = random.randint(1, 3)
@@ -3460,7 +3462,7 @@ while 1:
                                     xp = 0
                                 if int(xp) > rxp:
                                     xp = int(xp) - rxp
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
 
                                 # determine accident
                                 if dmg == 1:
@@ -3476,19 +3478,19 @@ while 1:
                                     continue
 
                                 # determine accident insurance
-                                bot.data_check(username, 'accident_insurance')
+                                bot.data_check(pusername, 'accident_insurance')
                                 # has accident insurance
-                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
 
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x034     Missed due to being bedazzled. [-' + str(rxp).encode() + b' xp] \x033[GUN NOT CONFISCATED: Accident Insurance]\x03\r\n')
                                     continue
                                 # does not have accident insurance
-                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                     # gun confiscation
                                     if confiscatedguns != '':
-                                        confiscatedguns = str(confiscatedguns) + ',' + str(username)
+                                        confiscatedguns = str(confiscatedguns) + ',' + pusername
                                     if confiscatedguns == '':
-                                        confiscatedguns = str(username)
+                                        confiscatedguns = pusername
 
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x034     Missed due to being debazzled. [-' + str(rxp).encode() + b' xp] [GUN CONFISCATED: ' + damage.encode() + b']\x03\r\n')
                                     continue
@@ -3519,7 +3521,7 @@ while 1:
                                 hitormiss = random.randrange(0, 140, 1)
 
                             # expl ammo adds +15 accuracy
-                            if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)):
+                            if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername):
                                 hitormiss = int(hitormiss) - 15
 
                             # missed
@@ -3531,7 +3533,7 @@ while 1:
 
                                     # accidents
                                     accidents = int(accidents) + 1
-                                    bot.duckinfo(username, b'accidents', str(accidents))
+                                    bot.duckinfo(pusername, b'accidents', str(accidents))
                                     # determine damage
                                     damage = ''
                                     dmg = random.randint(1, 3)
@@ -3559,36 +3561,36 @@ while 1:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp] [Ricochet]\x03\r\n')
                                         continue
                                     # determine accident insurance
-                                    bot.data_check(username, 'accident_insurance')
+                                    bot.data_check(pusername, 'accident_insurance')
 
                                     # has accident insurance
-                                    if bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                    if bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                         # deduct xp
                                         rxp = rxp + 4
                                         if int(xp) <= rxp:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username+ b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp]\x03 \x033[GUN NOT CONFISCATED: Accident Insurance]\x03\r\n')
                                         continue
                                     # does not have accident insurance
-                                    if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                    if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                         # deduct xp
                                         if int(xp) <= rxp:
                                             xp = 0
                                         if int(xp) > rxp:
                                             xp = int(xp) - rxp
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         # gun confiscation
                                         if confiscatedguns != '':
-                                            confiscatedguns = str(confiscatedguns) + ',' + str(username)
+                                            confiscatedguns = str(confiscatedguns) + ',' + pusername
                                         if confiscatedguns == '':
-                                            confiscatedguns = str(username)
+                                            confiscatedguns = pusername
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp] [GUN CONFISCATED: Ricochet]\x03\r\n')
                                         continue
 
@@ -3606,10 +3608,10 @@ while 1:
                                     # deduct xp
                                     if int(xp) <= int(rxp):
                                         xp = 0
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                     if int(xp) > int(rxp):
                                         xp = int(xp) - int(rxp)
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
 
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x03     \x034MISSED   [-' + str(rxp).encode() + b' xp]\x03\r\n')
                                     continue
@@ -3628,10 +3630,10 @@ while 1:
                                     # deduct xp
                                     if int(xp) <= int(rxp):
                                         xp = 0
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                     if int(xp) > int(rxp):
                                         xp = int(xp) - int(rxp)
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
 
                                     # first miss, not golden yet
                                     if bot.numtok(duckdata, ',') == 2:
@@ -3669,10 +3671,10 @@ while 1:
                                     # deduct xp
                                     if int(xp) <= int(rxp):
                                         xp = 0
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                     if int(xp) > int(rxp):
                                         xp = int(xp) - int(rxp)
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
 
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x03     \x034MISSED   [-' + str(rxp).encode() + b' xp]\x03\r\n')
                                     continue
@@ -3687,26 +3689,26 @@ while 1:
                                     # reaction time determination
                                     reacttime = round(time.time() - float(duck_time), 2)
                                     if best == '0':
-                                        bot.duckinfo(username, b'best', str(reacttime))
+                                        bot.duckinfo(pusername, b'best', str(reacttime))
                                     if float(best) > reacttime:
-                                        bot.duckinfo(username, b'best', str(reacttime))
+                                        bot.duckinfo(pusername, b'best', str(reacttime))
                                     # increase ducks
                                     ducks = int(ducks) + 1
-                                    bot.duckinfo(username, b'ducks', str(ducks))
+                                    bot.duckinfo(pusername, b'ducks', str(ducks))
                                     # increase xp
-                                    bot.data_check(username, 'lucky_charm')
+                                    bot.data_check(pusername, 'lucky_charm')
                                     # does not have lucky charm
-                                    if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                    if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                         exp = duckexp
                                         xp = int(xp) + exp
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         irc.send(b"PRIVMSG " + duckchan + b" :" + username + b' > \x0314*BANG*\x03     you shot down the duck in ' + bytes(str(reacttime), 'utf-8') + b' seconds.     \x02\\_X<\x02   \x0314*KWAK*\x03   \x033[+' + bytes(str(exp), 'utf-8') + b' xp] [TOTAL DUCKS: ' + bytes(str(ducks), 'utf-8') + b']\x03\r\n')
                                     # has lucky charm
-                                    if bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
-                                        lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', str(username)), 1, ',')
+                                    if bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
+                                        lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', pusername), 1, ',')
                                         exp = duckexp + int(lcxp)
                                         xp = int(xp) + int(exp)
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         irc.send(b"PRIVMSG " + duckchan + b" :" + username + b' > \x0314*BANG*\x03     you shot down the duck in ' + bytes(str(reacttime), 'utf-8') + b' seconds.     \x02\\_X<\x02   \x0314*KWAK*\x03   \x033[+' + bytes(str(exp), 'utf-8') + b' xp - Lucky Charm] [TOTAL DUCKS: ' + bytes(str(ducks), 'utf-8') + b']\x03\r\n')
                                     # reset duck info
                                     duck[duckid] = 'None'
@@ -3722,11 +3724,11 @@ while 1:
                                     if int(thebushes) > 0:
                                         searchbush = random.randrange(1, 100, 1)
                                         if int(searchbush) < int(thebushes):
-                                            bushes = bot.searchthebushes(username)
+                                            bushes = bot.searchthebushes(pusername)
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + bytes(str(bushes), 'utf-8') + b'\r\n')
                                     # check for level up
                                     if int(xp) >= int(levelup):
-                                        level_up(username)
+                                        level_up(pusername)
                                     continue
 
                                 # normal-gold ducks
@@ -3736,7 +3738,7 @@ while 1:
                                     ddmg = 1
                                     duckstat = random.randint(4, 6)
                                     # expl ammo
-                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)):
+                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername):
                                         ddmg = 2
                                     duckdata = bot.gettok(duckdata, 0, ',') + ',golden,' + str(duckstat)
                                     duck[duckid] = duckdata
@@ -3751,7 +3753,7 @@ while 1:
 
                                     # duck survived
                                     # expl ammo
-                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)):
+                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername):
                                         if int(duckhp) > 2:
                                             ddmg = 2
                                             duckhp = int(duckhp) - int(ddmg)
@@ -3760,7 +3762,7 @@ while 1:
                                             irc.send(b"PRIVMSG " + duckchan + b" :" + username + b' > \x0314*BANG*\x03     The GOLDEN DUCK surivived!     \x02\x034\\_O< [Life -' + str(ddmg).encode() + b']\x03\x02\r\n')
                                             continue
                                     # regular ammo
-                                    if int(duckhp) > 1 and bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)) is False:
+                                    if int(duckhp) > 1 and bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername) is False:
                                         ddmg = 1
                                         duckhp = int(duckhp) - int(ddmg)
                                         duckdata = bot.gettok(duckdata, 0, ',') + ',' + bot.gettok(duckdata, 1, ',') + ',' + str(duckhp)
@@ -3771,7 +3773,7 @@ while 1:
                                     # shot down the golden duck
                                     # expl ammo
                                     expl = False
-                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', str(username)) and int(duckhp) <= 2:
+                                    if bot.cnfexists('duckhunt.cnf', 'expl_ammo', pusername) and int(duckhp) <= 2:
                                         expl = True
 
                                     # regular ammo
@@ -3783,33 +3785,33 @@ while 1:
                                         # reaction time determination
                                         reacttime = round(time.time() - float(duck_time), 2)
                                         if best == '0':
-                                            bot.duckinfo(username, b'best', str(reacttime))
+                                            bot.duckinfo(pusername, b'best', str(reacttime))
                                         if float(best) > reacttime:
-                                            bot.duckinfo(username, b'best', str(reacttime))
+                                            bot.duckinfo(pusername, b'best', str(reacttime))
                                         # increase ducks
                                         gducks = int(gducks) + 1
-                                        bot.duckinfo(username, b'gducks', str(gducks))
+                                        bot.duckinfo(pusername, b'gducks', str(gducks))
                                         # increase xp
-                                        bot.data_check(username, 'lucky_charm')
+                                        bot.data_check(pusername, 'lucky_charm')
                                         # does not have lucky charm
-                                        if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                        if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                             exp = duckexp * 3
                                             xp = int(xp) + int(exp)
-                                            bot.duckinfo(username, b'xp', str(xp))
+                                            bot.duckinfo(pusername, b'xp', str(xp))
                                             irc.send(b"PRIVMSG " + duckchan + b" :" + username + b' > \x0314*BANG*\x03     you shot down the GOLDEN DUCK in ' + bytes(str(reacttime), 'utf-8') + b' seconds.     \x02\\_X<\x02   \x0314*KWAK*\x03   \x033[+' + bytes(str(exp), 'utf-8') + b' xp] [TOTAL GOLDEN DUCKS: ' + bytes(str(gducks), 'utf-8') + b']\x03\r\n')
                                         # has lucky charm
-                                        if bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                        if bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                             exp = duckexp * 3
-                                            lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', str(username)), 1, ',')
+                                            lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', pusername), 1, ',')
                                             exp = int(exp) + int(lcxp)
                                             xp = int(xp) + int(exp)
-                                            bot.duckinfo(username, b'xp', str(xp))
+                                            bot.duckinfo(pusername, b'xp', str(xp))
                                             irc.send(b"PRIVMSG " + duckchan + b" :" + username + b' > \x0314*BANG*\x03     you shot down the GOLDEN DUCK in ' + bytes(str(reacttime), 'utf-8') + b' seconds.     \x02\\_X<\x02   \x0314*KWAK*\x03   \x033[+' + bytes(str(exp), 'utf-8') + b' xp - Lucky Charm] [TOTAL GOLDEN DUCKS: ' + bytes(str(gducks), 'utf-8') + b']\x03\r\n')
 
                                         # searching the bushes
                                         searchbush = random.randrange(1, 100, 1)
                                         if int(searchbush) < int(thebushes):
-                                            bushes = bot.searchthebushes(username)
+                                            bushes = bot.searchthebushes(pusername)
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + bytes(
                                                 str(bushes), 'utf-8') + b'\r\n')
 
@@ -3824,7 +3826,7 @@ while 1:
                                             fear_factor = False
                                         # check for level up
                                         if int(xp) >= int(levelup):
-                                            level_up(username)
+                                            level_up(pusername)
 
                                         continue
 
@@ -3832,7 +3834,7 @@ while 1:
                         if not duck_exists():
 
                             accidents = int(accidents) + 1
-                            bot.duckinfo(username, b'accidents', str(accidents))
+                            bot.duckinfo(pusername, b'accidents', str(accidents))
 
                             # ricochet
                             ricochet = random.randint(1, 100)
@@ -3863,36 +3865,36 @@ while 1:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(dmg).encode() + b' xp] [Ricochet]\x03\r\n')
                                     continue
 
                                 # determine accident insurance
-                                bot.data_check(username, 'accident_insurance')
+                                bot.data_check(pusername, 'accident_insurance')
                                 # has accident insurance
-                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                     # deduct xp
                                     rxp = rxp + 4
                                     if int(xp) <= rxp:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(rxp).encode() + b' xp]\x03 \x033[GUN NOT CONFISCATED: Accident Insurance]\x03\r\n')
                                     continue
                                 # does not have accident insurance
-                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                     # deduct xp
                                     if int(xp) <= rxp:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     # gun confiscation
                                     if confiscatedguns != '':
-                                        confiscatedguns = str(confiscatedguns) + ',' + str(username)
+                                        confiscatedguns = str(confiscatedguns) + ',' + pusername
                                     if confiscatedguns == '':
-                                        confiscatedguns = str(username)
+                                        confiscatedguns = pusername
 
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*    *PEEEWWWWW*\x03    The bullet ricochets and ' + bytes(str(damage), 'utf-8') + b' \x034[-' + str(rxp).encode() + b' xp] [GUN CONFISCATED: Ricochet]\x03\r\n')
                                     continue
@@ -3927,35 +3929,35 @@ while 1:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x03    What did you shoot at? There is no duck in the area...   \x034[-' + str(rxp).encode() + b' xp] [' + damage.encode() + b']\x03\r\n')
                                     continue
                                 # determine accident insurance
-                                bot.data_check(username, 'accident_insurance')
+                                bot.data_check(pusername, 'accident_insurance')
                                 # has accident insurance
-                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                     # deduct xp
                                     rxp = rxp + 4
                                     if int(xp) <= rxp:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x03    What did you shoot at? There is no duck in the area...    \x034[-' + str(rxp).encode() + b' xp]\x03 \x033[GUN NOT CONFISCATED: Accident Insurance]\x03\r\n')
                                     continue
                                 # does not have accident insurance
-                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', str(username)):
+                                if not bot.cnfexists('duckhunt.cnf', 'accident_insurance', pusername):
                                     # deduct xp
                                     if int(xp) <= rxp:
                                         xp = 0
                                     if int(xp) > rxp:
                                         xp = int(xp) - rxp
-                                    bot.duckinfo(username, b'xp', str(xp))
+                                    bot.duckinfo(pusername, b'xp', str(xp))
                                     # gun confiscation
                                     if confiscatedguns != '':
-                                        confiscatedguns = str(confiscatedguns) + ',' + str(username)
+                                        confiscatedguns = str(confiscatedguns) + ',' + pusername
                                     if confiscatedguns == '':
-                                        confiscatedguns = str(username)
+                                        confiscatedguns = pusername
                                     irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*BANG*\x03    What did you shoot at? There is no duck in the area...   \x034[-' + str(rxp).encode() + b' xp] [GUN CONFISCATED: ' + damage.encode() + b']\x03\r\n')
                                     continue
 # ======================================================================================================================
@@ -3965,7 +3967,7 @@ while 1:
                         if bef == 'off':
                             continue
                         # new users with no stats, bread doesn't need to be reloaded
-                        if bot.cnfexists('duckhunt.cnf', 'ducks', str(username)) is False:
+                        if bot.cnfexists('duckhunt.cnf', 'ducks', pusername) is False:
                             if infammo == 'on':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > Your bread doesn't need to be reloaded. | Bread Pieces: 12/12 | Loaf: \x02\x033Inf\x02\x03\r\n")
                             if infammo == 'off':
@@ -3973,10 +3975,10 @@ while 1:
                             continue
 
                         # reloading bread box
-                        bread = bot.gettok(bot.duckinfo(username, b'bread'), 0, '?')
-                        mbread = bot.gettok(bot.duckinfo(username, b'bread'), 1, '?')
-                        loaf = bot.gettok(bot.duckinfo(username, b'bread'), 2, '?')
-                        mloaf = bot.gettok(bot.duckinfo(username, b'bread'), 3, '?')
+                        bread = bot.gettok(bot.duckinfo(pusername, b'bread'), 0, '?')
+                        mbread = bot.gettok(bot.duckinfo(pusername, b'bread'), 1, '?')
+                        loaf = bot.gettok(bot.duckinfo(pusername, b'bread'), 2, '?')
+                        mloaf = bot.gettok(bot.duckinfo(pusername, b'bread'), 3, '?')
 
                         if int(bread) == 0:
 
@@ -3991,7 +3993,7 @@ while 1:
 
                             bread = mbread
                             breadbox = str(bread) + '?' + str(mbread) + '?' + str(loaf) + '?' + str(mloaf)
-                            bot.duckinfo(username, b'bread', str(breadbox))
+                            bot.duckinfo(pusername, b'bread', str(breadbox))
                             if infammo == 'on':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*Shmp..CLICK*\x03     You reload your bread box. | Bread Pieces: ' + bytes(str(bread), 'utf-8') + b'/' + bytes(str(mbread), 'utf-8') + b' | Loaf: \x02\x033Inf\x02\x03\r\n')
                             if infammo == 'off':
@@ -4011,55 +4013,55 @@ while 1:
                         if bef == 'off':
                             continue
                         # new users with no stats
-                        if not bot.cnfexists('duckhunt.cnf', 'ducks', str(username)):
+                        if not bot.cnfexists('duckhunt.cnf', 'ducks', pusername):
                             dinfo = '7?3?7?3,0,0,0,1,200,0,0,75?80?80,0,0,12?12?3?3,0'
-                            bot.cnfwrite('duckhunt.cnf', 'ducks', str(username), str(dinfo))
+                            bot.cnfwrite('duckhunt.cnf', 'ducks', pusername, str(dinfo))
                             bot.cnfwrite('duckhunt.cnf', 'ducks', 'cache', '1')
 
                         # player is bombed
-                        if bot.cnfexists('duckhunt.cnf', 'bombed', str(username)):
+                        if bot.cnfexists('duckhunt.cnf', 'bombed', pusername):
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x034Your clothes are crusty and filthy from being duck bombed. You cannot befriend ducks like this, you need new clothes.\r\n')
                             continue
 
                         # player is soggy
-                        bot.data_check(username, 'soggy')
-                        if bot.cnfexists('duckhunt.cnf', 'soggy', str(username)):
+                        bot.data_check(pusername, 'soggy')
+                        if bot.cnfexists('duckhunt.cnf', 'soggy', pusername):
                             # determine time remaining
                             # 1 hour timer calculation
-                            timeleft = bot.data_check(str(username), 'soggy', 'get')
+                            timeleft = bot.data_check(pusername, 'soggy', 'get')
                             timemath = bot.hour1() - math.ceil(time.time() - float(timeleft))
                             timemath = bot.timeconvertmsg(timemath)
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x034Your clothes are all soggy. You cannot befriend ducks until you're dry. \x033[Time Remaining: " + bytes(str(timemath), 'utf-8') + b']\x03\r\n')
                             continue
 
                         # friending data
-                        xp = bot.duckinfo(username, b'xp')
-                        breadbox = bot.duckinfo(username, b'bread')
+                        xp = bot.duckinfo(pusername, b'xp')
+                        breadbox = bot.duckinfo(pusername, b'bread')
                         bread = bot.gettok(breadbox, 0, '?')
                         mbread = bot.gettok(breadbox, 1, '?')
                         loaf = bot.gettok(breadbox, 2, '?')
                         mloaf = bot.gettok(breadbox, 3, '?')
-                        friend = bot.duckinfo(username, b'friend')
-                        # inventory = bot.duckinfo(username, b'inv')
-                        level = bot.duckinfo(username, b'level')
-                        levelup = bot.duckinfo(username, b'levelup')
-                        best = bot.duckinfo(username, b'best')
+                        friend = bot.duckinfo(pusername, b'friend')
+                        # inventory = bot.duckinfo(pusername, b'inv')
+                        level = bot.duckinfo(pusername, b'level')
+                        levelup = bot.duckinfo(pusername, b'levelup')
+                        best = bot.duckinfo(pusername, b'best')
 
                         # Bread box lock
-                        if bot.cnfexists('duckhunt.cnf', 'bread_lock', str(username)) and not duck_exists():
-                            useleft = bot.cnfread('duckhunt.cnf', 'bread_lock', str(username))
+                        if bot.cnfexists('duckhunt.cnf', 'bread_lock', pusername) and not duck_exists():
+                            useleft = bot.cnfread('duckhunt.cnf', 'bread_lock', pusername)
                             if int(useleft) == 1:
                                 useleft = '0'
-                                bot.cnfdelete('duckhunt.cnf', 'bread_lock', str(username))
+                                bot.cnfdelete('duckhunt.cnf', 'bread_lock', pusername)
                             if int(useleft) > 1:
                                 useleft = int(useleft) - 1
-                                bot.cnfwrite('duckhunt.cnf', 'bread_lock', str(username), str(useleft))
+                                bot.cnfwrite('duckhunt.cnf', 'bread_lock', pusername, str(useleft))
                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314*Bzzt..Click*\x03     \x034BREAD BOX LOCKED   [' + bytes(str(useleft), 'utf-8') + b']\x03\r\n')
                             continue
 
                         # out of bread (updated 1.1.4)
-                        bot.data_check(str(username), 'popcorn')
-                        if int(bread) == 0 and bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)) is False:
+                        bot.data_check(pusername, 'popcorn')
+                        if int(bread) == 0 and bot.cnfexists('duckhunt.cnf', 'popcorn', pusername) is False:
                             if infammo == 'on':
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x0314*BZZT*\x03     \x034EMPTY BOX\x03 | Bread pieces:\x034 0\x03/" + bytes(str(mbread), 'utf-8') + b" | Loaf: \x02\x033Inf\x02\x03   [\x02Reloaf\x02 your bread box.]\r\n")
                             if infammo == 'off':
@@ -4067,19 +4069,19 @@ while 1:
                             continue
 
                         # tosses a peice of bread (doesn't have popcorn) (updated 1.1.4)
-                        if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)) is False:
+                        if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername) is False:
                             bread = int(bread) - 1
 
                         # has popcorn (updated 1.1.4)
-                        bot.data_check(str(username), 'popcorn')
-                        if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)) is True:
-                            popc = bot.cnfread('duckhunt.cnf', 'popcorn', str(username))
+                        bot.data_check(pusername, 'popcorn')
+                        if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername) is True:
+                            popc = bot.cnfread('duckhunt.cnf', 'popcorn', pusername)
                             if int(popc) > 0:
                                 popc = int(popc) - 1
-                                bot.cnfwrite('duckhunt.cnf', 'popcorn', str(username), str(popc))
+                                bot.cnfwrite('duckhunt.cnf', 'popcorn', pusername, str(popc))
 
                         breadbox = str(bread) + '?' + str(mbread) + '?' + str(loaf) + '?' + str(mloaf)
-                        bot.duckinfo(username, b'bread', str(breadbox))
+                        bot.duckinfo(pusername, b'bread', str(breadbox))
                         # no duck in the area
                         if not duck_exists():
                             # deduct xp
@@ -4095,12 +4097,12 @@ while 1:
                                 xp = 0
                             if int(xp) > rxp:
                                 xp = int(xp) - rxp
-                            bot.duckinfo(username, b'xp', str(xp))
+                            bot.duckinfo(pusername, b'xp', str(xp))
 
-                            if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username).lower()) is True:
+                            if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername) is True:
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Tosses a piece of popcorn at nothing? There are no ducks in the area. \x034[-1 Popcorn] [-' + bytes(str(rxp), 'utf-8') + b' xp]\x03\r\n')
                                 continue
-                            if not bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                            if not bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > Tosses a piece of bread at nothing? There are no ducks in the area. \x034[-1 Bread] [-' + bytes(str(rxp), 'utf-8') + b' xp]\x03\r\n')
                                 continue
 
@@ -4108,8 +4110,8 @@ while 1:
                         if duck_exists():
 
                             # check if player is bedazzled
-                            bot.data_check(username, 'bedazzled')
-                            if bot.cnfexists('duckhunt.cnf', 'bedazzled', str(username)):
+                            bot.data_check(pusername, 'bedazzled')
+                            if bot.cnfexists('duckhunt.cnf', 'bedazzled', pusername):
                                 rxp = random.randint(1, 2)
                                 if int(xp) >= 10000 or int(level) >= 10:
                                     rxp = rxp * 6
@@ -4123,7 +4125,7 @@ while 1:
                                     xp = 0
                                 if int(xp) > rxp:
                                     xp = int(xp) - rxp
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
 
                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b" > \x034UNLUCKY\x03     You tossed in the wrong direction because you're bedazzled!     \x034[-" + bytes(str(rxp), 'utf-8') + b' xp] [Bedazzled]\r\n')
                                 continue
@@ -4156,7 +4158,7 @@ while 1:
                                 friendornot = random.randrange(0, 140, 1)
 
                             # has popcorn
-                            if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                            if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                 friendornot = int(friendornot) - 15
                             # unlucky
                             if friendornot > int(friendrate):
@@ -4174,7 +4176,7 @@ while 1:
                                     xp = 0
                                 if int(xp) > rxp:
                                     xp = int(xp) - rxp
-                                bot.duckinfo(username, b'xp', str(xp))
+                                bot.duckinfo(pusername, b'xp', str(xp))
 
                                 # normal duck
                                 if bot.gettok(duckdata, 1, ',') == 'normal':
@@ -4214,36 +4216,36 @@ while 1:
                                     # reaction time determination
                                     reacttime = round(time.time() - float(duck_time), 2)
                                     if best == '0':
-                                        bot.duckinfo(username, b'best', str(reacttime))
+                                        bot.duckinfo(pusername, b'best', str(reacttime))
                                     if float(best) > reacttime:
-                                        bot.duckinfo(username, b'best', str(reacttime))
+                                        bot.duckinfo(pusername, b'best', str(reacttime))
 
                                     # increase friends
                                     friend = int(friend) + 1
-                                    bot.duckinfo(username, b'friend', str(friend))
+                                    bot.duckinfo(pusername, b'friend', str(friend))
 
                                     # increase xp
-                                    bot.data_check(username, 'lucky_charm')
+                                    bot.data_check(pusername, 'lucky_charm')
 
                                     # has lucky charm
-                                    if bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
-                                        lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', str(username)), 1, ',')
+                                    if bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
+                                        lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', pusername), 1, ',')
                                         exp = duckexp + int(lcxp)
                                         xp = int(xp) + int(exp)
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         wooid = 'bread'
-                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                             wooid = 'popcorn'
                                         wooid = wooid.encode()
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314FRIEND\x03     The duck ate the piece of ' + wooid + b'!     \x02\\_O< QUAACK!\x02\x033   [BEFRIENDED DUCKS: ' + bytes(str(friend), 'utf-8') + b'] [+' + bytes(str(exp), 'utf-8') + b' xp - Lucky Charm]\x03\r\n')
 
                                     # does not have lucky charm
-                                    if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                    if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                         exp = duckexp
                                         xp = int(xp) + exp
-                                        bot.duckinfo(username, b'xp', str(xp))
+                                        bot.duckinfo(pusername, b'xp', str(xp))
                                         wooid = 'bread'
-                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                             wooid = 'popcorn'
                                         wooid = wooid.encode()
                                         irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314FRIEND\x03     The duck ate the piece of ' + wooid + b'!     \x02\\_O< QUAACK!\x02\x033   [BEFRIENDED DUCKS: ' + bytes(str(friend), 'utf-8') + b'] [+' + bytes(str(duckexp), 'utf-8') + b' xp]\x03\r\n')
@@ -4258,14 +4260,14 @@ while 1:
                                     if int(thebushes) > 0:
                                         searchbush = random.randrange(1, 100, 1)
                                         if int(searchbush) < int(thebushes):
-                                            bushes = bot.searchthebushes(username)
+                                            bushes = bot.searchthebushes(pusername)
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + bytes(str(bushes), 'utf-8') + b'\r\n')
                                     # no more ducks, reset fear
                                     if not duck_exists():
                                         fear_factor = False
                                     # check for level up
                                     if int(xp) >= int(levelup):
-                                        level_up(username)
+                                        level_up(pusername)
                                     continue
 
                                 # normal-gold duck
@@ -4273,7 +4275,7 @@ while 1:
                                 if bot.gettok(duckdata, 1, ',') == 'gold':
                                     ddmg = 1
                                     woid = 'bread'
-                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                         ddmg = 2
                                         woid = 'popcorn'
                                     duckstat = random.randint(4, 6)
@@ -4287,7 +4289,7 @@ while 1:
                                     duckhp = bot.gettok(duckdata, 2, ',')
 
                                     # has popcorn
-                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                         if int(duckhp) > 2:
                                             ddmg = 2
                                             duckhp = int(duckhp) - int(ddmg)
@@ -4299,7 +4301,7 @@ while 1:
                                     if int(duckhp) > 1:
                                         ddmg = 1
                                         wid = 'bread'
-                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)):
+                                        if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername):
                                             ddmg = 2
                                             wid = 'popcorn'
                                         wid = wid.encode()
@@ -4312,7 +4314,7 @@ while 1:
                                     # befriended the golden duck
                                     # popcorn
                                     popc = False
-                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', str(username)) and int(duckhp) <= 2:
+                                    if bot.cnfexists('duckhunt.cnf', 'popcorn', pusername) and int(duckhp) <= 2:
                                         popc = True
 
                                     if int(duckhp) == 1 or popc is True:
@@ -4323,29 +4325,29 @@ while 1:
                                         # reaction time determination
                                         reacttime = round(time.time() - float(duck_time), 2)
                                         if best == '0':
-                                            bot.duckinfo(username, b'best', str(reacttime))
+                                            bot.duckinfo(pusername, b'best', str(reacttime))
                                         if float(best) > reacttime:
-                                            bot.duckinfo(username, b'best', str(reacttime))
+                                            bot.duckinfo(pusername, b'best', str(reacttime))
                                         # increase friends
                                         friend = int(friend) + 1
-                                        bot.duckinfo(username, b'friend', str(friend))
+                                        bot.duckinfo(pusername, b'friend', str(friend))
                                         # increase xp
-                                        bot.data_check(username, 'lucky_charm')
+                                        bot.data_check(pusername, 'lucky_charm')
 
                                         # has lucky charm
-                                        if bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                        if bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                             exp = duckexp * 3
-                                            lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', str(username)), 1, ',')
+                                            lcxp = bot.gettok(bot.cnfread('duckhunt.cnf', 'lucky_charm', pusername), 1, ',')
                                             exp = int(exp) + int(lcxp)
                                             xp = int(xp) + int(exp)
-                                            bot.duckinfo(username, b'xp', str(xp))
+                                            bot.duckinfo(pusername, b'xp', str(xp))
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314FRIEND\x03     The GOLDEN DUCK ate the piece of ' + bytes(str(woid), 'utf-8') + b'!     \x02\\_0< QUAACK!\x02\x033   [BEFRIENDED DUCKS: ' + bytes(str(friend), 'utf-8') + b'] [+' + bytes(str(exp), 'utf-8') + b' xp - Lucky Charm]\x03\r\n')
 
                                         # does not have lucky charm
-                                        if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', str(username)):
+                                        if not bot.cnfexists('duckhunt.cnf', 'lucky_charm', pusername):
                                             exp = duckexp * 3
                                             xp = int(xp) + int(exp)
-                                            bot.duckinfo(username, b'xp', str(xp))
+                                            bot.duckinfo(pusername, b'xp', str(xp))
                                             irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > \x0314FRIEND\x03     The GOLDEN DUCK ate the piece of ' + bytes(str(woid), 'utf-8') + b'!     \x02\\_0< QUAACK!\x02\x033   [BEFRIENDED DUCKS: ' + bytes(str(friend), 'utf-8') + b'] [+' + bytes(str(exp), 'utf-8') + b' xp]\x03\r\n')
 
                                         # reset duck info
@@ -4358,14 +4360,14 @@ while 1:
                                         if int(thebushes) > 0:
                                             searchbush = random.randrange(1, 100, 1)
                                             if int(searchbush) < int(thebushes):
-                                                bushes = bot.searchthebushes(username)
+                                                bushes = bot.searchthebushes(pusername)
                                                 irc.send(b'PRIVMSG ' + duckchan + b' :' + username + b' > ' + bytes(str(bushes), 'utf-8') + b'\r\n')
                                         # no more ducks, reset fear
                                         if not duck_exists():
                                             fear_factor = False
                                         # check for level up
                                         if int(xp) >= int(levelup):
-                                            level_up(username)
+                                            level_up(pusername)
                                         continue
 
                     # ======================================================================================================================
